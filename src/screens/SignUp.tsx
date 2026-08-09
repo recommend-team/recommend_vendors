@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ChoiceCard } from '../components/ui/ChoiceCard';
 import { Field, PasswordField } from '../components/ui/Field';
@@ -28,8 +28,18 @@ const CATEGORIES = [
   'Other',
 ];
 
+/**
+ * The marketing site's tier cards link here as `/signup?type=REGISTERED`, so a vendor
+ * who already picked a tier there does not pick it again. Anything unrecognised is
+ * ignored rather than trusted — it arrives from a URL.
+ */
+function typeFromQuery(raw: string | null): VendorType | '' {
+  return raw === 'REGISTERED' || raw === 'NON_REGISTERED' ? raw : '';
+}
+
 export function SignUp() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -37,7 +47,7 @@ export function SignUp() {
   const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   const [form, setForm] = useState({
-    vendorType: '' as VendorType | '',
+    vendorType: typeFromQuery(params.get('type')),
     firstName: '',
     lastName: '',
     phoneNumber: '',
