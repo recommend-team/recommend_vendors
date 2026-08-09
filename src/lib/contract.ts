@@ -1,0 +1,115 @@
+/**
+ * The backend contract, as this app uses it.
+ *
+ * Mirrored by hand from `recommend-be` rather than generated: it is a small, stable
+ * surface, and hand-mirroring means a backend rename shows up as a type error here
+ * instead of `undefined` on a screen.
+ *
+ * Framework-agnostic, like everything in `lib/` — this file moves to React Native
+ * untouched.
+ */
+
+// ─── Envelope ─────────────────────────────────────────────────────────────────
+
+/** Every response is wrapped by the backend's global interceptor. */
+export interface ApiEnvelope<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp?: string;
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export type Role = 'BUYER' | 'SELLER' | 'RIDER' | 'ADMIN' | 'SUPER_ADMIN';
+
+/** Vendor account state. `APPROVED` is the only one that can trade. */
+export type SellerStatus = 'PENDING' | 'APPROVED' | 'SUSPENDED' | 'DEACTIVATED';
+
+export type VendorType = 'REGISTERED' | 'NON_REGISTERED';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  role: Role;
+  status: SellerStatus;
+  vendorType: VendorType | null;
+  businessName: string | null;
+  isEmailVerified: boolean;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+
+/**
+ * Mirrors `OrderStatus` on the backend, in lifecycle order.
+ *
+ * On a vendor's own order only `PAID → READY` is theirs to move. `DISPATCHED` and
+ * `COMPLETED` are checkout-level: with one rider carrying a whole basket, no single
+ * vendor knows collection has finished or that the goods were handed over.
+ *
+ * `PROCESSING` predates the lifecycle and is written by nothing.
+ */
+export type OrderStatus =
+  | 'PENDING_PAYMENT'
+  | 'PAID'
+  | 'READY'
+  | 'DISPATCHED'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'REFUNDED';
+
+export type FulfillmentType = 'PICKUP' | 'DELIVERY';
+
+export interface VendorOrder {
+  id: string;
+  buyerName: string;
+  buyerPhone: string;
+  buyerEmail: string | null;
+  /** This vendor's goods subtotal. Delivery belongs to the checkout, not here. */
+  totalAmount: string;
+  platformFee: string;
+  /** What this vendor is owed — 80% of their own subtotal. */
+  vendorAmount: string;
+  fulfillmentType: FulfillmentType;
+  status: OrderStatus;
+  deliveryAddress: string | null;
+  notes: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  items: {
+    id: string;
+    productId: string;
+    /** Snapshot taken at purchase — the product may have been renamed since. */
+    productName: string;
+    unitPrice: string;
+    quantity: number;
+    lineTotal: string;
+  }[];
+  /** The payment this order was part of; may cover other vendors too. */
+  checkout: {
+    id: string;
+    reference: string;
+    totalAmount: string;
+    deliveryFee: string;
+  } | null;
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# TypeScript build caches — machine-local, never committed.
+*.tsbuildinfo
+
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

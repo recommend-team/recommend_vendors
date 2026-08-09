@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
+@import 'tailwindcss';
+
+/**
+ * Palette taken verbatim from `recommend-fe/src/app/globals.css`.
+ *
+ * The vendor app follows the web app, not the customer app. The customer app is cream
+ * and warm because it is a conversation; this is white and plain because it is a shift.
+ * The green and orange are shared, so the two read as one company.
+ */
+@theme {
+  --color-brand: #006837;
+  --color-brand-hover: #007a41;
+  --color-brand-active: #00552a;
+
+  --color-accent: #ef5a22;
+
+  --color-amber: #ffffdc;
+  --color-amber-hover: #fffff0;
+  --color-amber-active: #e6e6b8;
+
+  --color-ink: #171717;
+  /* Secondary text and metadata. Anything lighter fails in a bright kitchen. */
+  --color-ink-soft: #5c5c5c;
+  --color-hairline: #e8e8e8;
+  --color-surface: #ffffff;
+  --color-canvas: #f6f6f4;
+
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/**
+ * A tool held in one hand, standing up, mid-service.
+ *
+ * `overscroll-behavior: none` stops the pull-to-refresh gesture throwing away a
+ * half-filled form — on a phone that gesture is one careless thumb away.
+ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* Prevents iOS inflating text in landscape and breaking careful layouts. */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+/* Never smaller than 16px on an input: iOS Safari zooms the whole page below that. */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: 16px;
+}
