@@ -17,6 +17,8 @@ import { ForgotPassword, ResetPassword } from './screens/ForgotPassword';
 import { Orders } from './screens/Orders';
 import { OrderDetail } from './screens/OrderDetail';
 import { Kyc } from './screens/Kyc';
+import { Products } from './screens/Products';
+import { ProductForm } from './screens/ProductForm';
 import { ApprovalBanner } from './components/ApprovalBanner';
 
 export function App() {
@@ -39,6 +41,9 @@ export function App() {
             <Route element={<RequireAuth />}>
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/products/new" element={<ProductForm />} />
+              <Route path="/products/:id" element={<ProductForm />} />
               <Route path="/kyc" element={<Kyc />} />
             </Route>
 

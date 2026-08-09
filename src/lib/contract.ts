@@ -113,3 +113,31 @@ export interface Paginated<T> {
   limit: number;
   totalPages: number;
 }
+
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+/**
+ * One thing a vendor sells.
+ *
+ * Deliberately narrow, and narrower than the reference design implies. The backend's
+ * `Product` entity has exactly these columns — there is **no stock level, no category
+ * and no second image**, so the "Stock Level", "Category" and "Enable Track Inventory"
+ * controls in the design have nothing to write to. Building them would mean fields that
+ * silently do nothing.
+ *
+ * Adding any of them is backend work: a migration, DTO changes, and a decision about
+ * what stock means when two buyers check out at once.
+ */
+export interface Product {
+  id: string;
+  vendorId: string;
+  name: string;
+  description: string | null;
+  /** Postgres decimal — arrives as a string. */
+  price: string;
+  imageUrl: string | null;
+  /** What buyers see. False hides it from search without deleting it. */
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

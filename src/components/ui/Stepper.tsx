@@ -1,4 +1,3 @@
-
 export function Stepper({ step, total }: { step: number; total: number }) {
   return (
     <div className="flex items-center gap-3">
