@@ -19,6 +19,11 @@ import { OrderDetail } from './screens/OrderDetail';
 import { Kyc } from './screens/Kyc';
 import { Products } from './screens/Products';
 import { ProductForm } from './screens/ProductForm';
+import { Dashboard } from './screens/Dashboard';
+import { StoreDetails } from './screens/StoreDetails';
+import { ServiceAreas } from './screens/ServiceAreas';
+import { Payout } from './screens/Payout';
+import { Earnings } from './screens/Earnings';
 import { ApprovalBanner } from './components/ApprovalBanner';
 
 export function App() {
@@ -41,6 +46,11 @@ export function App() {
             <Route element={<RequireAuth />}>
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/store" element={<StoreDetails />} />
+              <Route path="/areas" element={<ServiceAreas />} />
+              <Route path="/payout" element={<Payout />} />
+              <Route path="/earnings" element={<Earnings />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/new" element={<ProductForm />} />
               <Route path="/products/:id" element={<ProductForm />} />

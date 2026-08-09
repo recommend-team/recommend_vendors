@@ -4,9 +4,7 @@ import type { ReactNode } from 'react';
 /**
  * The tab bar from the reference.
  *
- * Products, Orders and KYC are live; Dashboard arrives with its sprint. Shown disabled rather than
- * hidden so the chrome does not shift under a vendor's thumb once they land — a nav bar
- * that grows a button between visits is a nav bar you have to re-learn.
+ * Every tab is live as of V4.
  */
 const TABS: {
   to: string;
@@ -17,7 +15,7 @@ const TABS: {
   {
     to: '/dashboard',
     label: 'Dashboard',
-    ready: false,
+    ready: true,
     icon: (
       <path
         d="M4 4h7v7H4V4zm9 0h7v4h-7V4zM4 13h7v7H4v-7zm9-3h7v10h-7V10z"

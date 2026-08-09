@@ -141,3 +141,74 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
+// ─── Profile, coverage and money ──────────────────────────────────────────────
+
+export interface State {
+  id: string;
+  name: string;
+}
+
+export interface Area {
+  id: string;
+  name: string;
+  stateId: string;
+}
+
+/**
+ * Everything `GET /sellers/profile` returns.
+ *
+ * Wider than any one screen needs — it carries the business details, the KYC document
+ * URLs and the payout account together — because it is one endpoint and splitting it
+ * client-side is cheaper than three round trips on a phone.
+ */
+export interface VendorProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  phoneNumber: string | null;
+  status: SellerStatus;
+  vendorType: VendorType | null;
+  slug: string | null;
+
+  businessName: string | null;
+  businessAddress: string | null;
+  businessDescription: string | null;
+  businessCategory: string | null;
+  /** Resolved rows, not ids — sending them back requires `areaIds`. */
+  serviceAreas: { id: string; name: string; stateId: string }[];
+  businessLogoUrl: string | null;
+  businessBannerUrl: string | null;
+  whatsappNumber: string | null;
+  /** The shop shutter. False hides every product from buyers at once. */
+  isOpen: boolean;
+
+  // KYC — which of these are set tells the vendor what is still outstanding.
+  cacDocumentUrl: string | null;
+  tinDocumentUrl: string | null;
+  ninDocumentUrl: string | null;
+  passportPhotoUrl: string | null;
+  bankStatementUrl: string | null;
+  utilityBillUrl: string | null;
+
+  bankName: string | null;
+  bankCode: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+
+  /** 0–100, computed server-side. */
+  profileCompleteness: number;
+  storefrontUrl: string | null;
+  isEmailVerified: boolean;
+}
+
+export interface Earnings {
+  /** What buyers paid for this vendor's items, before the platform's cut. */
+  grossTotal: number;
+  /** What the vendor is owed — 80% of gross. */
+  netTotal: number;
+  platformFeeTotal: number;
+  monthlyBreakdown: { month: string; gross: number; net: number }[];
+}
