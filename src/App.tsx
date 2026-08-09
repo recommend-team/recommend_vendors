@@ -1,33 +1,110 @@
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
+import { SessionProvider, useSession } from './hooks/useSession';
+import { BottomNav } from './components/layout/BottomNav';
 import { UpdateToast } from './components/UpdateToast';
+import { Welcome } from './screens/Welcome';
+import { Login } from './screens/Login';
+import { Orders } from './screens/Orders';
+import { OrderDetail } from './screens/OrderDetail';
 
-/**
- * The shell.
- *
- * V0 is setup only — there are no screens yet, and no router until V1 gives it
- * something to route between. This placeholder exists so the build, the service worker
- * and the install path can be proved end to end before any of that is written.
- */
 export function App() {
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col bg-surface">
-      <header className="flex items-center gap-3 border-b border-hairline px-4 py-4">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand text-lg font-extrabold text-white">
-          R
-        </span>
-        <div>
-          <h1 className="text-base font-extrabold text-ink">Recommend</h1>
-          <p className="text-xs text-ink-soft">for vendors</p>
+    <SessionProvider>
+      <BrowserRouter>
+        {/* Width-capped so the phone layout still reads on a desktop browser, which is
+            where most of the testing happens. */}
+        <div className="mx-auto h-full max-w-md bg-canvas shadow-xl">
+          <Routes>
+            <Route element={<PublicOnly />}>
+              <Route path="/" element={<Welcome />} />
+              <Route path="/login" element={<Login />} />
+            </Route>
+
+            <Route element={<RequireAuth />}>
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:id" element={<OrderDetail />} />
+            </Route>
+
+            {/* Not built yet. Sending them to Orders beats a blank screen. */}
+            <Route path="/signup" element={<ComingSoon what="Signing up" />} />
+            <Route
+              path="/forgot-password"
+              element={<ComingSoon what="Password reset" />}
+            />
+            <Route path="*" element={<Navigate to="/orders" replace />} />
+          </Routes>
         </div>
-      </header>
+        <UpdateToast />
+      </BrowserRouter>
+    </SessionProvider>
+  );
+}
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="text-sm font-bold text-ink">Setup complete</p>
-        <p className="max-w-xs text-sm leading-relaxed text-ink-soft">
-          Orders, products and payouts land here as the sprints ship.
-        </p>
-      </main>
+/**
+ * The signed-in shell.
+ *
+ * Waits for the session check before deciding. Without that, a vendor with a perfectly
+ * good token is bounced to the login screen for the split second it takes to confirm it
+ * — which on a slow connection is not a split second.
+ */
+function RequireAuth() {
+  const { user, loading } = useSession();
+  const location = useLocation();
 
-      <UpdateToast />
+  if (loading) return <Splash />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <Outlet />
+      </div>
+      <BottomNav />
+    </div>
+  );
+}
+
+/** Someone already signed in has no use for the welcome screen. */
+function PublicOnly() {
+  const { user, loading } = useSession();
+
+  if (loading) return <Splash />;
+  if (user) return <Navigate to="/orders" replace />;
+
+  return <Outlet />;
+}
+
+function Splash() {
+  return (
+    <div className="grid h-full place-items-center bg-canvas">
+      <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-extrabold text-white">
+        R
+      </span>
+    </div>
+  );
+}
+
+function ComingSoon({ what }: { what: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 bg-canvas px-8 text-center">
+      <p className="text-[15px] font-bold text-ink">{what} lands next</p>
+      <p className="text-[13px] leading-relaxed text-ink-soft">
+        For now, ask us to set your account up and sign in with the details we
+        send you.
+      </p>
+      <a
+        href="/login"
+        className="mt-2 inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-[14px] font-bold text-white"
+      >
+        Back to login
+      </a>
     </div>
   );
 }

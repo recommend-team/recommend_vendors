@@ -2,39 +2,42 @@
 @import 'tailwindcss';
 
 /**
- * Palette taken verbatim from `recommend-fe/src/app/globals.css`.
+ * Palette from `recommend-fe/src/app/globals.css`, arranged the way the reference
+ * designs use it.
  *
- * The vendor app follows the web app, not the customer app. The customer app is cream
- * and warm because it is a conversation; this is white and plain because it is a shift.
- * The green and orange are shared, so the two read as one company.
+ * The references are warm — cream pages, white cards, an orange primary action and a
+ * mint secondary — which is the `--color-recommend-amber` family already in the web app
+ * rather than anything new. Green stays the brand and the "good news" colour; orange is
+ * what you tap.
  */
 @theme {
+  /* recommend-fe, verbatim */
   --color-brand: #006837;
   --color-brand-hover: #007a41;
   --color-brand-active: #00552a;
-
   --color-accent: #ef5a22;
+  --color-accent-hover: #d94d18;
+  --color-accent-active: #c04412;
 
-  --color-amber: #ffffdc;
-  --color-amber-hover: #fffff0;
-  --color-amber-active: #e6e6b8;
+  /* Surfaces. The cream page is what makes the references feel like one product. */
+  --color-canvas: #fcfae8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fffdf0;
+  /* Deep green, for the unauthenticated screens and anything that wants weight. */
+  --color-forest: #0b3a2b;
+  /* Secondary action: present but not competing with the orange. */
+  --color-mint: #cdeacd;
+  --color-mint-hover: #bee0be;
 
   --color-ink: #171717;
-  /* Secondary text and metadata. Anything lighter fails in a bright kitchen. */
+  /* Secondary text. Anything lighter stops being readable in a bright kitchen. */
   --color-ink-soft: #5c5c5c;
-  --color-hairline: #e8e8e8;
-  --color-surface: #ffffff;
-  --color-canvas: #f6f6f4;
+  --color-ink-faint: #8a8a8a;
+  --color-hairline: #ece7cf;
 
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/**
- * A tool held in one hand, standing up, mid-service.
- *
- * `overscroll-behavior: none` stops the pull-to-refresh gesture throwing away a
- * half-filled form — on a phone that gesture is one careless thumb away.
- */
 html,
 body,
 #root {
@@ -46,16 +49,24 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  /* Prevents iOS inflating text in landscape and breaking careful layouts. */
+  /* Stops iOS inflating text in landscape and breaking careful layouts. */
   -webkit-text-size-adjust: 100%;
+  /**
+   * Kills pull-to-refresh. On a phone that gesture is one careless thumb away, and
+   * losing a half-filled product form to it would be maddening.
+   */
   overscroll-behavior-y: none;
 }
 
-/* Never smaller than 16px on an input: iOS Safari zooms the whole page below that. */
+/* Never below 16px on an input: iOS Safari zooms the whole page when focusing one. */
 input,
 select,
 textarea,
 button {
   font-family: inherit;
   font-size: 16px;
+}
+
+button {
+  cursor: pointer;
 }
