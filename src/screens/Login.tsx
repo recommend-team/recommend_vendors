@@ -34,8 +34,16 @@ export function Login() {
       await login({ email: email.trim(), password });
       navigate('/orders', { replace: true });
     } catch (cause) {
-      // The backend distinguishes wrong credentials from an unverified email and a
-      // suspended account, and each needs a different action from the vendor — so its
+      if (
+        cause instanceof ApiError &&
+        /verify your email/i.test(cause.message)
+      ) {
+        navigate('/verify', { state: { email: email.trim() } });
+        return;
+      }
+
+      // Everything else the backend distinguishes — wrong credentials, a suspended
+      // account, too many attempts — needs a different action from the vendor, so its
       // message is shown rather than a generic one.
       setError(
         cause instanceof ApiError
@@ -97,12 +105,15 @@ export function Login() {
         />
 
         {error && (
-          <p
+          <div
             role="alert"
             className="rounded-2xl bg-accent/10 px-4 py-3 text-[13px] leading-snug text-accent"
           >
             {error}
-          </p>
+            <Link to="/verify" className="mt-1 block font-extrabold underline">
+              Just signed up? Enter your code
+            </Link>
+          </div>
         )}
 
         <Button type="submit" loading={busy} className="mt-2">

@@ -1,18 +1,7 @@
 import { request } from '../api';
 import { clearSession, storeSession } from '../auth';
-import type { AuthUser, LoginResponse } from '../contract';
+import type { AuthUser, LoginResponse, VendorType } from '../contract';
 
-/**
- * Signing in.
- *
- * **The API authenticates by email, not phone.** The reference design shows a phone
- * field with a +234 selector; `loginSchema` on the backend is `{ email, password }` and
- * there is no phone lookup anywhere in `auth.service.ts`. Building the phone field would
- * produce a login screen that cannot log anyone in, so this follows the API.
- *
- * If phone login is wanted it is a backend change first — resolve the number to a user,
- * decide what happens when two accounts share one, and only then move the field.
- */
 export async function login(credentials: {
   email: string;
   password: string;
@@ -46,4 +35,67 @@ export async function logout(): Promise<void> {
   } finally {
     clearSession();
   }
+}
+
+export interface VendorRegistration {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  /** E.164. The backend rejects anything else. */
+  phoneNumber: string;
+  vendorType: VendorType;
+  businessName: string;
+  businessAddress: string;
+  businessCategory: string;
+  businessDescription?: string;
+}
+
+export function registerVendor(input: VendorRegistration): Promise<unknown> {
+  return request<unknown>('/auth/register/vendor', {
+    method: 'POST',
+    anonymous: true,
+    body: JSON.stringify(input),
+  });
+}
+
+/** The six-digit code from the email. */
+export function verifyEmail(input: {
+  email: string;
+  code: string;
+}): Promise<unknown> {
+  return request<unknown>('/auth/verify-email', {
+    method: 'POST',
+    anonymous: true,
+    body: JSON.stringify(input),
+  });
+}
+
+export function resendVerification(email: string): Promise<unknown> {
+  return request<unknown>('/auth/resend-verification', {
+    method: 'POST',
+    anonymous: true,
+    body: JSON.stringify({ email }),
+  });
+}
+
+// ─── Forgotten passwords ──────────────────────────────────────────────────────
+
+export function forgotPassword(email: string): Promise<unknown> {
+  return request<unknown>('/auth/forgot-password', {
+    method: 'POST',
+    anonymous: true,
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(input: {
+  token: string;
+  password: string;
+}): Promise<unknown> {
+  return request<unknown>('/auth/reset-password', {
+    method: 'POST',
+    anonymous: true,
+    body: JSON.stringify(input),
+  });
 }

@@ -11,8 +11,13 @@ import { BottomNav } from './components/layout/BottomNav';
 import { UpdateToast } from './components/UpdateToast';
 import { Welcome } from './screens/Welcome';
 import { Login } from './screens/Login';
+import { SignUp } from './screens/SignUp';
+import { VerifyEmail } from './screens/VerifyEmail';
+import { ForgotPassword, ResetPassword } from './screens/ForgotPassword';
 import { Orders } from './screens/Orders';
 import { OrderDetail } from './screens/OrderDetail';
+import { Kyc } from './screens/Kyc';
+import { ApprovalBanner } from './components/ApprovalBanner';
 
 export function App() {
   return (
@@ -25,19 +30,18 @@ export function App() {
             <Route element={<PublicOnly />}>
               <Route path="/" element={<Welcome />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/verify" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
 
             <Route element={<RequireAuth />}>
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/kyc" element={<Kyc />} />
             </Route>
 
-            {/* Not built yet. Sending them to Orders beats a blank screen. */}
-            <Route path="/signup" element={<ComingSoon what="Signing up" />} />
-            <Route
-              path="/forgot-password"
-              element={<ComingSoon what="Password reset" />}
-            />
             <Route path="*" element={<Navigate to="/orders" replace />} />
           </Routes>
         </div>
@@ -50,9 +54,9 @@ export function App() {
 /**
  * The signed-in shell.
  *
- * Waits for the session check before deciding. Without that, a vendor with a perfectly
- * good token is bounced to the login screen for the split second it takes to confirm it
- * — which on a slow connection is not a split second.
+ * Waits for the session check before deciding — without that, a vendor with a perfectly
+ * good token is bounced to login for however long the check takes, which on a slow
+ * connection is not a moment.
  */
 function RequireAuth() {
   const { user, loading } = useSession();
@@ -63,6 +67,7 @@ function RequireAuth() {
 
   return (
     <div className="flex h-full flex-col">
+      <ApprovalBanner />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </div>
@@ -71,7 +76,7 @@ function RequireAuth() {
   );
 }
 
-/** Someone already signed in has no use for the welcome screen. */
+/** Someone already signed in has no use for the welcome or signup screens. */
 function PublicOnly() {
   const { user, loading } = useSession();
 
@@ -87,24 +92,6 @@ function Splash() {
       <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-extrabold text-white">
         R
       </span>
-    </div>
-  );
-}
-
-function ComingSoon({ what }: { what: string }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 bg-canvas px-8 text-center">
-      <p className="text-[15px] font-bold text-ink">{what} lands next</p>
-      <p className="text-[13px] leading-relaxed text-ink-soft">
-        For now, ask us to set your account up and sign in with the details we
-        send you.
-      </p>
-      <a
-        href="/login"
-        className="mt-2 inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-[14px] font-bold text-white"
-      >
-        Back to login
-      </a>
     </div>
   );
 }
