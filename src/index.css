@@ -11,29 +11,41 @@
  * what you tap.
  */
 @theme {
-  /* recommend-fe, verbatim */
   --color-brand: #006837;
   --color-brand-hover: #007a41;
   --color-brand-active: #00552a;
-  --color-accent: #ef5a22;
-  --color-accent-hover: #d94d18;
-  --color-accent-active: #c04412;
 
-  /* Surfaces. The cream page is what makes the references feel like one product. */
-  --color-canvas: #fcfae8;
-  --color-surface: #ffffff;
-  --color-surface-soft: #fffdf0;
+  /**
+   * The orange is deeper than `recommend-fe`'s.
+   *
+   * On a yellow page a bright orange vibrates and stops reading as a button; the
+   * references use a burnt orange that holds its edge. Everything a vendor taps is this
+   * colour, and nothing else is.
+   */
+  --color-accent: #d4480f;
+  --color-accent-hover: #c04010;
+  --color-accent-active: #a5360c;
+
+  /* Surfaces. The yellow page is what makes the references feel like one product. */
+  --color-canvas: #faf9d5;
+  /* Warm white, not pure — a #fff card on this page looks like a hole punched in it. */
+  --color-surface: #fffef6;
+  --color-surface-soft: #f4f2cd;
+  /* Pale olive: stat tiles, media wells, anything recessed rather than raised. */
+  --color-amber: #e8e6bb;
   /* Deep green, for the unauthenticated screens and anything that wants weight. */
   --color-forest: #0b3a2b;
   /* Secondary action: present but not competing with the orange. */
-  --color-mint: #cdeacd;
-  --color-mint-hover: #bee0be;
+  --color-mint: #a9dfa9;
+  --color-mint-hover: #98d398;
+  /* The quiet green behind a tip, a status pill, or a "rider is close" strip. */
+  --color-mint-soft: #dcf0d6;
 
-  --color-ink: #171717;
+  --color-ink: #1b1b17;
   /* Secondary text. Anything lighter stops being readable in a bright kitchen. */
-  --color-ink-soft: #5c5c5c;
-  --color-ink-faint: #8a8a8a;
-  --color-hairline: #ece7cf;
+  --color-ink-soft: #5f6055;
+  --color-ink-faint: #8d8e80;
+  --color-hairline: #e4e1bd;
 
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }

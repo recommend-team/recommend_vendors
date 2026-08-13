@@ -34,31 +34,12 @@ export function updateVendorProfile(
   });
 }
 
-export interface PayoutDetails {
-  bankName: string;
-  bankCode: string;
-  /** Exactly ten digits — a NUBAN. */
-  bankAccountNumber: string;
-  bankAccountName: string;
-}
+// Payout details are no longer part of the profile. `PATCH /sellers/profile/payout` now
+// answers 410 — bank accounts are verified rows of their own, in `wallet.service.ts`.
 
-/**
- * Where a vendor's money goes.
- *
- * All four fields are required together: a half-saved bank account is one that cannot
- * be paid into, and the backend's schema says the same.
- */
-export function updatePayoutDetails(
-  details: PayoutDetails,
-): Promise<VendorProfile> {
-  return request<VendorProfile>('/sellers/profile/payout', {
-    method: 'PATCH',
-    body: JSON.stringify(details),
-  });
-}
-
+/** Renamed from `/sellers/earnings`, which still works but is deprecated. */
 export function fetchEarnings(): Promise<Earnings> {
-  return request<Earnings>('/sellers/earnings');
+  return request<Earnings>('/sellers/sales');
 }
 
 // ─── Coverage ─────────────────────────────────────────────────────────────────

@@ -13,6 +13,10 @@ import type { VendorOrder } from '../../lib/contract';
  * apart. Declining is agreed but deliberately unbuilt: the money has already been taken,
  * so it needs a refund path, and half a refund path is worse than none. Until it exists
  * a decline is a phone call, recorded by admin as an override.
+ *
+ * The reference also puts a courier strip on a ready order — "David K. is 2 mins away".
+ * `VendorOrder` carries no rider, so the strip says what is actually known: the goods are
+ * ready and a rider has not collected them yet.
  */
 export function OrderCard({
   order,
@@ -38,23 +42,36 @@ export function OrderCard({
     >
       <div className="flex items-start justify-between gap-3 px-4 pt-3.5">
         <div className="min-w-0">
-          <p className="truncate font-mono text-[13px] font-bold text-ink">
+          <p className="truncate font-mono text-[13px] font-extrabold text-ink">
             {orderLabel(order)}
           </p>
           <p className="mt-0.5 truncate text-[13px] text-ink-soft">
-            {order.buyerName}
+            Customer: {order.buyerName}
           </p>
         </div>
         <StatusPill status={order.status} />
       </div>
 
-      <ul className="mt-3 space-y-1 px-4">
+      <ul className="mt-3 space-y-1.5 px-4">
         {order.items.map((item) => (
-          <li key={item.id} className="flex items-baseline gap-2 text-[14px]">
-            <span className="shrink-0 font-extrabold text-ink-faint">
+          <li key={item.id} className="flex items-center gap-2 text-[14px]">
+            <span className="shrink-0 text-brand" aria-hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M20 4c0 8-5 12-11 12H5c0-8 5-12 11-12h4zM5 20c0-4 3-7 7-8"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="shrink-0 font-extrabold text-ink">
               {item.quantity}×
             </span>
-            <span className="min-w-0 flex-1 text-ink">{item.productName}</span>
+            <span className="min-w-0 flex-1 truncate text-ink">
+              {item.productName}
+            </span>
           </li>
         ))}
         {order.items.length === 0 && (
@@ -62,8 +79,16 @@ export function OrderCard({
         )}
       </ul>
 
-      <div className="mt-3 flex items-baseline justify-between px-4">
+      {order.status === 'READY' && (
+        <p className="mx-4 mt-3 rounded-xl bg-mint-soft px-3 py-2 text-[12px] leading-snug font-bold text-brand">
+          Ready — waiting for a rider to collect.
+        </p>
+      )}
+
+      <div className="mt-3 flex items-baseline justify-between border-t border-hairline px-4 pt-3">
         <span className="text-[12px] text-ink-faint">
+          Total amount
+          {' · '}
           {order.fulfillmentType === 'PICKUP' ? 'Pickup' : 'Delivery'}
           {' · '}
           {formatOrderTime(order.createdAt)}
@@ -74,7 +99,7 @@ export function OrderCard({
         </span>
       </div>
 
-      <div className="mt-3.5 flex gap-2 border-t border-hairline p-3">
+      <div className="flex gap-2 p-3">
         <Link
           to={`/orders/${order.id}`}
           className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-mint px-4 text-[14px] font-bold text-brand transition active:scale-[0.99]"

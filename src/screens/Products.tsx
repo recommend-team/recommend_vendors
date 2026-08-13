@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Fab } from '../components/ui/Fab';
 import { formatNaira } from '../lib/format';
 import { PRODUCT_LIMIT } from '../lib/services/products.service';
 import { useProducts, useToggleAvailability } from '../hooks/useProducts';
 import { useSession } from '../hooks/useSession';
 import type { Product } from '../lib/contract';
 
-type Filter = 'all' | 'available' | 'hidden';
+type Filter = 'all' | 'inStock' | 'outOfStock';
 
 /**
  * The catalogue.
@@ -14,6 +15,15 @@ type Filter = 'all' | 'available' | 'hidden';
  * Search and filters are here because a vendor with twenty products scrolling on a phone
  * needs them, and twenty is the ceiling the backend enforces — so both stay client-side.
  * One request, filtered in memory, no round trip per keystroke.
+ *
+ * **"Out of stock", never "Hidden".** The flag underneath is `isAvailable`, which is
+ * really "do buyers see this", but that describes the mechanism rather than the reason.
+ * Running out is why a vendor reaches for this switch nearly every time, so it is worded
+ * as stock.
+ *
+ * The row and the filter read `Active` / `Out of stock`. The edit form's switch reads
+ * `In stock`, because a switch labelled "Active" whose off position means "out of stock"
+ * is a riddle — a badge and a toggle want different grammar for the same fact.
  */
 export function Products() {
   const { user } = useSession();
@@ -22,13 +32,15 @@ export function Products() {
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
+  const [blocked, setBlocked] = useState<string | null>(null);
 
   const approved = user?.status === 'APPROVED';
   const atLimit = total >= PRODUCT_LIMIT;
+  const canAdd = approved && !atLimit;
 
   const visible = products.filter((product) => {
-    if (filter === 'available' && !product.isAvailable) return false;
-    if (filter === 'hidden' && product.isAvailable) return false;
+    if (filter === 'inStock' && !product.isAvailable) return false;
+    if (filter === 'outOfStock' && product.isAvailable) return false;
     if (!search) return true;
 
     const needle = search.toLowerCase();
@@ -39,40 +51,63 @@ export function Products() {
   });
 
   return (
-    <div className="relative flex min-h-full flex-col bg-canvas">
-      <header className="px-4 pt-6 pb-3">
-        <p className="text-[11px] font-extrabold tracking-widest text-accent uppercase">
-          Your catalogue
-        </p>
-        <h1 className="mt-0.5 text-3xl font-extrabold text-ink">Products</h1>
+    <div className="flex min-h-full flex-col bg-canvas pb-28">
+      <header className="px-4 pt-5 pb-4">
+        <h1 className="text-[26px] leading-tight font-extrabold text-ink">
+          Product Inventory
+        </h1>
         <p className="mt-1 text-[13px] text-ink-soft">
-          {total} of {PRODUCT_LIMIT} used
+          Manage your listings and what buyers can see.{' '}
+          <span className="font-bold text-accent">
+            {total} of {PRODUCT_LIMIT}
+          </span>{' '}
+          used.
         </p>
       </header>
 
       <div className="px-4">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search your products"
-          className="min-h-12 w-full rounded-full border border-hairline bg-surface px-5 text-ink outline-none placeholder:text-ink-faint"
-        />
+        <div className="relative">
+          <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-faint">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+                stroke="currentColor"
+                strokeWidth="1.9"
+              />
+              <path
+                d="m16.5 16.5 4 4"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search products..."
+            aria-label="Search products"
+            className="min-h-12 w-full rounded-full border border-hairline bg-surface pr-5 pl-11 text-ink outline-none placeholder:text-ink-faint"
+          />
+        </div>
 
         <div className="mt-3 flex gap-2">
           <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
-            All
+            All Items
           </Chip>
           <Chip
-            active={filter === 'available'}
-            onClick={() => setFilter('available')}
+            active={filter === 'inStock'}
+            onClick={() => setFilter('inStock')}
           >
-            On sale
+            Active
           </Chip>
           <Chip
-            active={filter === 'hidden'}
-            onClick={() => setFilter('hidden')}
+            active={filter === 'outOfStock'}
+            onClick={() => setFilter('outOfStock')}
           >
-            Hidden
+            Out of Stock
           </Chip>
         </div>
       </div>
@@ -128,44 +163,40 @@ export function Products() {
             Couldn&apos;t update that. Nothing has changed — try again.
           </p>
         )}
+
+        {/**
+         * Why the button is always drawn.
+         *
+         * It used to be hidden unless the vendor was approved and under the limit, on the
+         * grounds that `POST /products` would refuse them anyway. That reasoning was
+         * wrong: a vendor who cannot find the button does not conclude "I must not be
+         * approved yet", they conclude the app is broken. It is shown, and tapping it
+         * when it cannot work says why instead of navigating into a form that will fail.
+         */}
+        {blocked && (
+          <p
+            role="status"
+            className="rounded-2xl bg-amber px-4 py-3 text-[13px] leading-snug text-ink"
+          >
+            {blocked}
+          </p>
+        )}
       </div>
 
-      {/**
-       * Only offered when it can actually work.
-       *
-       * `POST /products` is refused for an unapproved vendor and once twenty products
-       * exist, so a button that leads to a guaranteed error is worse than no button —
-       * and worse still if it takes a vendor through a whole form first.
-       */}
-      {approved && !atLimit && (
-        <Link
-          to="/products/new"
-          aria-label="Add a product"
-          className="fixed right-5 bottom-24 grid h-14 w-14 place-items-center rounded-full bg-accent text-white shadow-lg transition active:scale-95"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </Link>
-      )}
-
-      {approved && atLimit && (
-        <p className="px-4 pb-4 text-center text-[12px] leading-snug text-ink-faint">
-          You&apos;ve listed the maximum of {PRODUCT_LIMIT} products. Remove one
-          to add another.
-        </p>
-      )}
+      <Fab
+        label="Add a product"
+        to={canAdd ? '/products/new' : undefined}
+        onClick={
+          canAdd
+            ? undefined
+            : () =>
+                setBlocked(
+                  atLimit
+                    ? `You've listed the maximum of ${PRODUCT_LIMIT} products. Remove one to add another.`
+                    : 'You can add products once an admin approves your account. Uploading your documents is the fastest way there.',
+                )
+        }
+      />
     </div>
   );
 }
@@ -181,10 +212,7 @@ function ProductRow({
 }) {
   return (
     <article className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-sm">
-      <Link
-        to={`/products/${product.id}`}
-        className="flex min-w-0 flex-1 gap-3"
-      >
+      <Link to={`/products/${product.id}`} className="flex min-w-0 flex-1 gap-3">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
@@ -194,13 +222,7 @@ function ProductRow({
           />
         ) : (
           <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-amber text-ink-faint">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
-            >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
               <rect
                 x="3"
                 y="5"
@@ -221,19 +243,25 @@ function ProductRow({
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-bold text-ink">
+          <p className="truncate text-[15px] font-extrabold text-ink">
             {product.name}
           </p>
-          <p className="mt-0.5 text-[15px] font-extrabold text-ink">
+          <p className="mt-0.5 text-[15px] font-extrabold text-accent">
             {formatNaira(product.price)}
           </p>
           <p
             className={[
-              'mt-0.5 text-[12px] font-bold',
+              'mt-1 flex items-center gap-1.5 text-[11px] font-extrabold tracking-wider uppercase',
               product.isAvailable ? 'text-brand' : 'text-ink-faint',
             ].join(' ')}
           >
-            {product.isAvailable ? 'On sale' : 'Hidden from buyers'}
+            <span
+              className={[
+                'h-1.5 w-1.5 rounded-full',
+                product.isAvailable ? 'bg-brand' : 'bg-ink-faint',
+              ].join(' ')}
+            />
+            {product.isAvailable ? 'Active' : 'Out of stock'}
           </p>
         </div>
       </Link>
@@ -248,7 +276,7 @@ function ProductRow({
         role="switch"
         aria-checked={product.isAvailable}
         aria-label={
-          product.isAvailable ? 'Hide from buyers' : 'Put back on sale'
+          product.isAvailable ? 'Mark out of stock' : 'Mark back in stock'
         }
         className={[
           'relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50',
@@ -278,9 +306,10 @@ function Chip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={[
-        'min-h-10 rounded-full px-4 text-[14px] font-bold transition',
-        active ? 'bg-accent text-white' : 'bg-surface text-ink-soft',
+        'min-h-10 rounded-full px-4 text-[13px] font-bold transition',
+        active ? 'bg-mint text-brand' : 'bg-surface text-ink-soft',
       ].join(' ')}
     >
       {children}

@@ -1,17 +1,19 @@
+import { Link } from 'react-router-dom';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useEarnings } from '../hooks/useProfile';
 import { formatNaira } from '../lib/format';
 
 /**
- * What the business has made.
+ * What the business has sold.
  *
  * Bars rather than a chart library: a dozen months of two numbers does not justify
  * shipping a charting dependency to a phone on mobile data, and a bar whose width is a
  * percentage is legible at a glance in a way a line chart on a small screen is not.
  *
- * **Earnings are not a wallet.** Nothing here is a balance that can be withdrawn — the
- * figures are what has been earned, and payouts are still arranged by hand. Saying so
- * plainly is better than letting a vendor read it as money waiting for them.
+ * **Still not the wallet**, though the reason has changed. Payouts are no longer arranged
+ * by hand — there is a real balance now — but this counts every *paid* order while the
+ * wallet counts only those a customer confirmed receiving. Two honest numbers that
+ * disagree, so the difference is stated rather than left to be discovered.
  */
 export function Earnings() {
   const { data, isLoading, isError } = useEarnings();
@@ -21,7 +23,7 @@ export function Earnings() {
 
   return (
     <div className="flex min-h-full flex-col bg-canvas">
-      <ScreenHeader title="Earnings" />
+      <ScreenHeader title="Sales" />
 
       <div className="space-y-3 px-4 pb-6">
         {isLoading && (
@@ -51,10 +53,17 @@ export function Earnings() {
               </div>
             </div>
 
-            <p className="px-1 text-[12px] leading-snug text-ink-soft">
-              This is what you have earned on completed orders, not a balance
-              you can withdraw — payouts are arranged with you directly for now.
-            </p>
+            <Link
+              to="/wallet"
+              className="block rounded-2xl bg-mint px-4 py-3 text-[12px] leading-snug text-brand"
+            >
+              This counts everything customers have paid for. Money becomes
+              yours to withdraw once they confirm they received the order —{' '}
+              <span className="font-extrabold underline">
+                see your wallet balance
+              </span>
+              .
+            </Link>
 
             <section className="rounded-2xl bg-surface p-4 shadow-sm">
               <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">

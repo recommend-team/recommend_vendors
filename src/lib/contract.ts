@@ -204,6 +204,13 @@ export interface VendorProfile {
   isEmailVerified: boolean;
 }
 
+/**
+ * What has been sold. **Not the wallet balance.**
+ *
+ * Counts every paid order; the wallet counts only orders a customer has confirmed
+ * receiving. They differ by everything in transit, and answer different questions —
+ * "how is business" against "what can I take out today".
+ */
 export interface Earnings {
   /** What buyers paid for this vendor's items, before the platform's cut. */
   grossTotal: number;
@@ -211,4 +218,118 @@ export interface Earnings {
   netTotal: number;
   platformFeeTotal: number;
   monthlyBreakdown: { month: string; gross: number; net: number }[];
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | 'NEW_ORDER'
+  | 'ORDER_PAID'
+  | 'ORDER_CANCELLED'
+  | 'KYC_APPROVED'
+  | 'KYC_REJECTED'
+  | 'WALLET_CREDITED'
+  | 'WITHDRAWAL_SETTLED'
+  | 'WITHDRAWAL_FAILED';
+
+/**
+ * One thing that happened.
+ *
+ * The durable record — push and email are best-effort layers on top of this, so anything
+ * a vendor missed elsewhere is still here.
+ */
+export interface VendorNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  /** Ids for deep-linking: `orderId`, `reference`, `withdrawalId`, and so on. */
+  data: Record<string, unknown> | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationFeed {
+  items: VendorNotification[];
+  total: number;
+  unread: number;
+  page: number;
+  limit: number;
+}
+
+// ─── Wallet ───────────────────────────────────────────────────────────────────
+
+export interface Wallet {
+  currency: string;
+  /** Summed from the ledger on every read, never stored. */
+  balance: number;
+  entryCount: number;
+}
+
+export type WalletEntryType =
+  | 'EARNING'
+  | 'COMMISSION'
+  | 'WITHDRAWAL'
+  | 'WITHDRAWAL_REVERSED'
+  | 'ADJUSTMENT';
+
+/** One movement. A sale is two of these: what was sold, and the commission on it. */
+export interface WalletEntry {
+  id: string;
+  type: WalletEntryType;
+  /** Signed — credits positive, debits negative. */
+  amount: number;
+  note: string | null;
+  orderId: string | null;
+  withdrawalId: string | null;
+  createdAt: string;
+}
+
+export interface Bank {
+  name: string;
+  code: string;
+  slug: string;
+}
+
+export type PayoutAccountStatus = 'PENDING_VERIFICATION' | 'ACTIVE' | 'REMOVED';
+
+export interface PayoutAccount {
+  id: string;
+  bankName: string;
+  bankCode: string;
+  /** Masked by the backend — the last four only. */
+  accountNumber: string;
+  /** As Paystack resolved it, not as anyone typed it. */
+  accountName: string;
+  status: PayoutAccountStatus;
+  isDefault: boolean;
+  verifiedAt: string | null;
+  createdAt: string;
+}
+
+export type WithdrawalStatus =
+  | 'REQUESTED'
+  | 'PROCESSING'
+  | 'SETTLED'
+  | 'FAILED'
+  | 'REVERSED';
+
+export interface Withdrawal {
+  id: string;
+  reference: string;
+  amountRequested: number;
+  feeAmount: number;
+  /** What actually reaches the bank, after the transfer fee. */
+  amountSent: number;
+  status: WithdrawalStatus;
+  failureReason: string | null;
+  createdAt: string;
+  settledAt: string | null;
+}
+
+/** What a withdrawal of a given amount would send, shown before confirming. */
+export interface WithdrawalQuote {
+  amountRequested: number;
+  feeAmount: number;
+  amountSent: number;
 }

@@ -4,9 +4,7 @@ import {
   fetchVendorProfile,
   listAreas,
   listStates,
-  updatePayoutDetails,
   updateVendorProfile,
-  type PayoutDetails,
   type ProfileChanges,
 } from '../lib/services/profile.service';
 import type { Area, Earnings, State, VendorProfile } from '../lib/contract';
@@ -38,10 +36,6 @@ function useProfileMutation<TInput>(
 
 export function useUpdateProfile() {
   return useProfileMutation<ProfileChanges>(updateVendorProfile);
-}
-
-export function useUpdatePayout() {
-  return useProfileMutation<PayoutDetails>(updatePayoutDetails);
 }
 
 export function useEarnings() {

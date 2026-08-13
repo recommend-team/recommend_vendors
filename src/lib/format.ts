@@ -39,6 +39,30 @@ export function formatOrderTime(iso: string): string {
 }
 
 /**
+ * "2m ago", "3h ago", "5d ago" — for an activity feed, where the gap matters more than
+ * the clock time. Anything older than a week is a date, because "23d ago" is arithmetic
+ * the reader has to do themselves.
+ */
+export function formatAgo(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  return date.toLocaleDateString('en-NG', { day: 'numeric', month: 'short' });
+}
+
+/**
  * A short handle for an order.
  *
  * Vendors read these aloud down a phone line, so the payment reference is preferable —

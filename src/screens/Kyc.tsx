@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { DocumentUpload } from '../components/ui/DocumentUpload';
+import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useSession } from '../hooks/useSession';
 import { ApiError } from '../lib/api';
 import {
@@ -75,19 +76,17 @@ export function Kyc() {
 
   return (
     <div className="flex min-h-full flex-col bg-canvas">
-      <header className="px-4 pt-6 pb-2">
-        <p className="text-[11px] font-extrabold tracking-widest text-accent uppercase">
-          Verification
-        </p>
-        <h1 className="mt-0.5 text-3xl font-extrabold text-ink">
-          Your documents
-        </h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
+      {/* No longer a tab, so it needs its own way out. An installed PWA has no browser
+          chrome to fall back on — without this a vendor is stranded here. */}
+      <ScreenHeader title="Your documents" subtitle="Verification" />
+
+      <div className="px-4 pb-2">
+        <p className="text-[14px] leading-relaxed text-ink-soft">
           {user?.vendorType === 'REGISTERED'
             ? 'Upload your registration documents so we can verify your business.'
             : 'Upload what you have. One is enough to start — you can add the rest later.'}
         </p>
-      </header>
+      </div>
 
       <div className="space-y-3 px-4 py-4">
         {required.map((document) => (

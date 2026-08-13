@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { OrderCard } from '../components/orders/OrderCard';
-import { PushPrompt } from '../components/PushPrompt';
+import { AlertsPrompt } from '../components/AlertsPrompt';
 import { useMarkReady, useOrders, type OrdersTab } from '../hooks/useOrders';
 import { useSession } from '../hooks/useSession';
 
@@ -19,11 +19,13 @@ export function Orders() {
 
   return (
     <div className="flex min-h-full flex-col bg-canvas">
-      <header className="px-4 pt-6 pb-3">
-        <p className="text-[11px] font-extrabold tracking-widest text-accent uppercase">
+      <header className="px-4 pt-5 pb-3">
+        <p className="text-[11px] font-extrabold tracking-widest text-ink-soft uppercase">
           Merchant portal
         </p>
-        <h1 className="mt-0.5 text-3xl font-extrabold text-ink">Orders</h1>
+        <h1 className="mt-0.5 text-[28px] leading-tight font-extrabold text-ink">
+          Orders
+        </h1>
         {user?.businessName && (
           <p className="mt-1 truncate text-[13px] text-ink-soft">
             {user.businessName}
@@ -31,7 +33,9 @@ export function Orders() {
         )}
       </header>
 
-      <div className="flex gap-2 px-4">
+      {/* A segmented control rather than two loose chips: it reads as one choice with
+          two settings, which is what it is. */}
+      <div className="mx-4 flex gap-1 rounded-full bg-amber p-1">
         <Tab
           active={tab === 'active'}
           onClick={() => setTab('active')}
@@ -46,7 +50,9 @@ export function Orders() {
         </Tab>
       </div>
 
-      <PushPrompt visible={!isLoading && !isError && orders.length > 0} />
+      {/* Install is offered from the first visit; the notification ask waits until an
+          order has actually arrived, because browsers only ever ask once. */}
+      <AlertsPrompt askForPush={!isLoading && !isError && orders.length > 0} />
 
       <div className="flex-1 space-y-3 px-4 py-4">
         {isLoading && (
@@ -113,19 +119,15 @@ function Tab({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={[
-        'inline-flex min-h-10 items-center gap-2 rounded-full px-5 text-[14px] font-bold transition',
-        active ? 'bg-accent text-white' : 'bg-surface text-ink-soft',
+        'inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full px-4 text-[14px] font-bold transition',
+        active ? 'bg-surface text-ink shadow-sm' : 'text-ink-soft',
       ].join(' ')}
     >
       {children}
       {badge !== undefined && (
-        <span
-          className={[
-            'grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-extrabold',
-            active ? 'bg-white/25 text-white' : 'bg-accent text-white',
-          ].join(' ')}
-        >
+        <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-white">
           {badge}
         </span>
       )}
