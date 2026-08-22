@@ -17,6 +17,7 @@ function setup({
   canAsk = true,
   kind = null as UseInstallPrompt['kind'],
   installed = false,
+  dismissed = false,
   askForPush = true,
 } = {}) {
   push.mockReturnValue({
@@ -29,6 +30,7 @@ function setup({
   install.mockReturnValue({
     kind,
     installed,
+    dismissed,
     install: vi.fn(),
     dismiss: vi.fn(),
     reset: vi.fn(),
@@ -121,5 +123,25 @@ describe('AlertsPrompt', () => {
     setup({ state: 'granted', canAsk: false, kind: null, installed: true });
 
     expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  /**
+   * Chrome hands over one prompt per page load and it is spent on the first tap. Backing
+   * out of that dialog used to leave the vendor with a card that had quietly lost its
+   * button — installable, told nothing. The browser's own menu still works, so say so.
+   */
+  it('points at the browser menu once the prompt has been spent', () => {
+    setup({ state: 'granted', canAsk: false, kind: 'manual' });
+
+    expect(screen.getByText(/install app/i)).toBeVisible();
+  });
+
+  it('goes quiet on the banner once dismissed, without claiming it cannot install', () => {
+    // `kind` deliberately survives a dismissal — the drawer still installs on demand.
+    setup({ state: 'granted', canAsk: false, kind: 'native', dismissed: true });
+
+    expect(
+      screen.queryByRole('button', { name: /add to home screen/i }),
+    ).toBeNull();
   });
 });

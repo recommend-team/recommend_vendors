@@ -141,7 +141,7 @@ export function Dashboard() {
             </p>
           ) : (
             <p className="mt-2 text-[12px] text-ink-soft">
-              After the platform fee. Paid out manually for now.
+              After the platform fee. 
             </p>
           )}
         </section>

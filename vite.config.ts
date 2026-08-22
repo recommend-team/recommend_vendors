@@ -16,7 +16,7 @@ export default defineConfig({
       // instead, and an ignored one still lands on the next cold start.
       registerType: 'prompt',
       // No service worker in dev. PWA behaviour is exercised against a build.
-      devOptions: { enabled: false },
+      devOptions: { enabled: true },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Recommend for Vendors',

@@ -10,10 +10,11 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt';
  * and no explanation. Since installing is the *precondition* for alerts rather than a
  * parallel suggestion, both live behind one decision here, in priority order:
  *
- * 1. **iOS, not installed** — nothing else is possible yet, so say how to install.
+ * 1. **Installable by hand** — iOS, or a Chrome whose prompt we have already spent.
+ *    Nothing else can be offered as a button, so say where the menu is.
  * 2. **Push available** — ask, and offer one-tap install alongside if Chrome allows it.
  *    Push works in an Android tab, so installing is never made a barrier to it.
- * 3. **Installable, push already settled** — a slim nudge, no notification talk.
+ * 3. **One-tap install, push already settled** — a slim nudge, no notification talk.
  * 4. **Denied** — explain, because a vendor who refused once assumes it is broken.
  *
  * **Installing and being notified are gated differently, and that matters.** Browsers ask
@@ -24,17 +25,26 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt';
  *
  * They were behind one gate before, which meant a vendor with no orders yet was shown
  * neither — and a vendor with no orders is precisely the one waiting to be told about one.
+ *
+ * Dismissal is checked here rather than read off `kind`, because it means "stop asking
+ * me", not "I can no longer install". The drawer still installs on demand.
  */
 export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
   const { state, canAsk, enable, dismiss, busy } = usePush();
   const install = useInstallPrompt();
+  const offerInstall = !install.dismissed;
 
-  // 1. iOS in a tab. Push is impossible until this is done, so it is the only ask.
-  if (install.kind === 'ios') {
+  // 1. No prompt to replay. On iOS push is impossible until this is done, so it is the
+  //    only ask; on Chrome it is the way back after the native dialog was backed out of.
+  if (offerInstall && (install.kind === 'ios' || install.kind === 'manual')) {
     return (
       <Card
         title="Add Recommend to your home screen"
-        body="On iPhone, we can only alert you about new orders once the app is on your home screen. Tap Share at the bottom of Safari, then “Add to Home Screen”."
+        body={
+          install.kind === 'ios'
+            ? 'On iPhone, we can only alert you about new orders once the app is on your home screen. Tap Share at the bottom of Safari, then “Add to Home Screen”.'
+            : 'Open your browser menu (⋮) and tap “Install app” to keep Recommend on your home screen — it opens straight to your orders.'
+        }
         onDismiss={install.dismiss}
       />
     );
@@ -53,7 +63,7 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
           disabled: busy,
         }}
         secondary={
-          install.kind === 'native'
+          offerInstall && install.kind === 'native'
             ? { label: 'Add to home screen', onClick: install.install }
             : undefined
         }
@@ -62,7 +72,7 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
   }
 
   // 3. Nothing to ask about, but it can still be installed — worth it on its own.
-  if (install.kind === 'native') {
+  if (offerInstall && install.kind === 'native') {
     return (
       <Card
         title="Add Recommend to your home screen"
