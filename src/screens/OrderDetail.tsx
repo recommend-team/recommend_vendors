@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { StatusPill } from '../components/ui/StatusPill';
 import { useMarkReady, useOrders } from '../hooks/useOrders';
 import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
+import { CollectionCheck } from '../components/orders/CollectionCheck';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -125,6 +126,11 @@ export function OrderDetail() {
             </p>
           )}
         </section>
+
+        {/* Ready and waiting at the counter: check the buyer's code before handing over. */}
+        {order.fulfillmentType === 'PICKUP' && order.status === 'READY' && (
+          <CollectionCheck orderId={order.id} />
+        )}
 
         <section className="rounded-2xl bg-surface p-4 shadow-sm">
           <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">

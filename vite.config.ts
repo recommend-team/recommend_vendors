@@ -49,7 +49,8 @@ export default defineConfig({
       injectManifest: {
         // Orders change by the minute and money must never be read from a cache — only
         // the shell is precached. `/api` is kept out of navigation in `sw.ts`.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // mp3: the notification sound (public/sounds) — cached so it plays offline too.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,mp3}'],
       },
     }),
   ],
