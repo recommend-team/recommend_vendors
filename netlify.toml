@@ -1,0 +1,14 @@
+# Netlify. The same job as vercel.json, for whichever host deploys this app.
+#
+# A single-page app: /login, /signup, /orders/123 exist only in React Router, not as
+# files. Without the rewrite, opening or refreshing any of them returns 404. Real files
+# (scripts, images, sw.js, the manifest) are still served first.
+
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

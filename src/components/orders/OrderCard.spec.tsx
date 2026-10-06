@@ -5,7 +5,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { OrderCard } from './OrderCard';
 import type { OrderStatus, VendorOrder } from '../../lib/contract';
 
-const order = (status: OrderStatus): VendorOrder => ({
+const order = (
+  status: OrderStatus,
+  over: Partial<VendorOrder> = {},
+): VendorOrder => ({
   id: 'o1',
   buyerName: 'Chinwe Obi',
   buyerPhone: '+2348012345678',
@@ -32,19 +35,25 @@ const order = (status: OrderStatus): VendorOrder => ({
   checkout: {
     id: 'ck1',
     reference: 'REC-8B2FCE09CA37',
-    totalAmount: '9400.00',
-    deliveryFee: '1500.00',
+    rider: null,
   },
+  ...over,
 });
 
-const draw = (status: OrderStatus, onMarkReady = vi.fn()) => {
+const draw = (
+  status: OrderStatus,
+  onMarkReady = vi.fn(),
+  over: Partial<VendorOrder> = {},
+) => {
   render(
     <MemoryRouter>
-      <OrderCard order={order(status)} onMarkReady={onMarkReady} />
+      <OrderCard order={order(status, over)} onMarkReady={onMarkReady} />
     </MemoryRouter>,
   );
   return onMarkReady;
 };
+
+const musa = { name: 'Musa Bello', phone: '+2348011111111' };
 
 describe('OrderCard', () => {
   it('offers "Mark ready" only on a paid order', async () => {
@@ -93,5 +102,35 @@ describe('OrderCard', () => {
   it('uses the payment reference, which the buyer and admin also hold', () => {
     draw('PAID');
     expect(screen.getByText('REC-8B2FCE09CA37')).toBeInTheDocument();
+  });
+
+  describe('a ready order', () => {
+    it('names the rider coming to collect, a tap away', () => {
+      draw('READY', vi.fn(), {
+        checkout: { id: 'ck1', reference: 'REC-8B2FCE09CA37', rider: musa },
+      });
+
+      expect(
+        screen.getByText(/Musa Bello is collecting it/),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'Call Musa Bello' }),
+      ).toHaveAttribute('href', 'tel:+2348011111111');
+    });
+
+    it('says a rider is being assigned when nobody is yet', () => {
+      draw('READY');
+      expect(
+        screen.getByText(/a rider is being assigned/i),
+      ).toBeInTheDocument();
+    });
+
+    it('says the customer is collecting a pickup', () => {
+      draw('READY', vi.fn(), { fulfillmentType: 'PICKUP' });
+      expect(
+        screen.getByText(/the customer is collecting it/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/rider/i)).not.toBeInTheDocument();
+    });
   });
 });

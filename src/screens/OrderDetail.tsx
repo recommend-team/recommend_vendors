@@ -132,6 +132,27 @@ export function OrderDetail() {
           <CollectionCheck orderId={order.id} />
         )}
 
+        {/* Who admin has sent to collect a delivery — so the vendor hands it to the right
+            person, and can call them if they're late. */}
+        {order.fulfillmentType === 'DELIVERY' && order.checkout?.rider && (
+          <section className="rounded-2xl bg-surface p-4 shadow-sm">
+            <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">
+              Rider
+            </h2>
+            <p className="mt-2 text-[15px] font-bold text-ink">
+              {order.checkout.rider.name}
+            </p>
+            {order.checkout.rider.phone && (
+              <a
+                href={`tel:${order.checkout.rider.phone}`}
+                className="mt-0.5 inline-block text-[14px] font-bold text-accent"
+              >
+                {order.checkout.rider.phone}
+              </a>
+            )}
+          </section>
+        )}
+
         <section className="rounded-2xl bg-surface p-4 shadow-sm">
           <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">
             Payment

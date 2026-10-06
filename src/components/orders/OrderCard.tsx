@@ -15,8 +15,8 @@ import type { VendorOrder } from '../../lib/contract';
  * a decline is a phone call, recorded by admin as an override.
  *
  * The reference also puts a courier strip on a ready order — "David K. is 2 mins away".
- * `VendorOrder` carries no rider, so the strip says what is actually known: the goods are
- * ready and a rider has not collected them yet.
+ * There is no live location, so the strip says what is actually known: who has been
+ * assigned to collect (with their number), or that nobody has yet.
  */
 export function OrderCard({
   order,
@@ -79,11 +79,7 @@ export function OrderCard({
         )}
       </ul>
 
-      {order.status === 'READY' && (
-        <p className="mx-4 mt-3 rounded-xl bg-mint-soft px-3 py-2 text-[12px] leading-snug font-bold text-brand">
-          Ready — waiting for a rider to collect.
-        </p>
-      )}
+      {order.status === 'READY' && <ReadyStrip order={order} />}
 
       <div className="mt-3 flex items-baseline justify-between border-t border-hairline px-4 pt-3">
         <span className="text-[12px] text-ink-faint">
@@ -118,5 +114,38 @@ export function OrderCard({
         )}
       </div>
     </article>
+  );
+}
+
+/**
+ * What a ready order is waiting for. A pickup, for the customer. A delivery, for the
+ * rider admin has assigned — named, a tap away — or, until there is one, for admin.
+ */
+function ReadyStrip({ order }: { order: VendorOrder }) {
+  const rider = order.checkout?.rider;
+  const strip =
+    'mx-4 mt-3 flex items-center justify-between gap-2 rounded-xl bg-mint-soft px-3 py-2 text-[12px] leading-snug font-bold text-brand';
+
+  if (order.fulfillmentType === 'PICKUP') {
+    return <p className={strip}>Ready — the customer is collecting it.</p>;
+  }
+  if (!rider) {
+    return <p className={strip}>Ready — a rider is being assigned.</p>;
+  }
+  return (
+    <p className={strip}>
+      <span className="min-w-0 truncate">
+        Ready — {rider.name} is collecting it.
+      </span>
+      {rider.phone && (
+        <a
+          href={`tel:${rider.phone}`}
+          aria-label={`Call ${rider.name}`}
+          className="shrink-0 rounded-full bg-brand px-3 py-1 text-[12px] font-extrabold text-white"
+        >
+          Call
+        </a>
+      )}
+    </p>
   );
 }

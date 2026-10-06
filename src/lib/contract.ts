@@ -95,12 +95,16 @@ export interface VendorOrder {
     quantity: number;
     lineTotal: string;
   }[];
-  /** The payment this order was part of; may cover other vendors too. */
+  /**
+   * The payment this order was part of; may cover other vendors too. Narrowed by the
+   * server to what a vendor may see — never the basket's totals, which would show other
+   * sellers' shares.
+   */
   checkout: {
     id: string;
     reference: string;
-    totalAmount: string;
-    deliveryFee: string;
+    /** Who is coming to collect a delivery, once admin has assigned them. */
+    rider: { name: string; phone: string | null } | null;
   } | null;
 }
 
@@ -308,11 +312,7 @@ export interface PayoutAccount {
 }
 
 export type WithdrawalStatus =
-  | 'REQUESTED'
-  | 'PROCESSING'
-  | 'SETTLED'
-  | 'FAILED'
-  | 'REVERSED';
+  'REQUESTED' | 'PROCESSING' | 'SETTLED' | 'FAILED' | 'REVERSED';
 
 export interface Withdrawal {
   id: string;
