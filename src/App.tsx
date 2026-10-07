@@ -126,9 +126,7 @@ function PublicOnly() {
 function Splash() {
   return (
     <div className="grid h-full place-items-center bg-canvas">
-      <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-extrabold text-white">
-        R
-      </span>
+      <img src="/logo-mark.svg" alt="Recommend" className="h-14 w-auto" />
     </div>
   );
 }
