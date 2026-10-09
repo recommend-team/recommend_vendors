@@ -29,6 +29,7 @@ export interface ProductInput {
   description?: string;
   imageUrl?: string;
   isAvailable?: boolean;
+  isAddOn?: boolean;
 }
 
 /**

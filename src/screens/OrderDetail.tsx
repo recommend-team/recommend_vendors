@@ -3,6 +3,7 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { useMarkReady, useOrders } from '../hooks/useOrders';
 import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
 import { CollectionCheck } from '../components/orders/CollectionCheck';
+import { AddOnTag } from '../components/orders/AddOnTag';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -91,6 +92,7 @@ export function OrderDetail() {
                 </span>
                 <span className="min-w-0 flex-1 text-ink">
                   {item.productName}
+                  {item.isAddOn && <AddOnTag />}
                 </span>
                 <span className="shrink-0 text-ink-soft">
                   {formatNaira(item.lineTotal)}

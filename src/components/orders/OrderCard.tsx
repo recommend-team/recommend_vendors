@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { StatusPill } from '../ui/StatusPill';
 import { formatNaira, formatOrderTime, orderLabel } from '../../lib/format';
 import type { VendorOrder } from '../../lib/contract';
+import { AddOnTag } from './AddOnTag';
 
 /**
  * One order, as the reference draws it: a coloured spine, the reference, the customer,
@@ -71,6 +72,7 @@ export function OrderCard({
             </span>
             <span className="min-w-0 flex-1 truncate text-ink">
               {item.productName}
+              {item.isAddOn && <AddOnTag />}
             </span>
           </li>
         ))}

@@ -94,6 +94,8 @@ export interface VendorOrder {
     unitPrice: string;
     quantity: number;
     lineTotal: string;
+    /** Bought as an extra — pack it with the meal. Absent on older servers. */
+    isAddOn?: boolean;
   }[];
   /**
    * The payment this order was part of; may cover other vendors too. Narrowed by the
@@ -142,6 +144,12 @@ export interface Product {
   imageUrl: string | null;
   /** What buyers see. False hides it from search without deleting it. */
   isAvailable: boolean;
+  /**
+   * An extra — drinks, extra protein — sold only with a main item from this vendor.
+   * Kept out of search and offered to buyers at checkout. Absent from a server older
+   * than add-ons, which reads as false.
+   */
+  isAddOn?: boolean;
   createdAt: string;
   updatedAt: string;
 }

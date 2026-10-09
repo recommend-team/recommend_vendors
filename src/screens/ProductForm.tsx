@@ -44,6 +44,7 @@ export function ProductForm() {
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
+  const [addOn, setAddOn] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -56,6 +57,7 @@ export function ProductForm() {
     setDescription(existing.description ?? '');
     setImageUrl(existing.imageUrl);
     setAvailable(existing.isAvailable);
+    setAddOn(existing.isAddOn ?? false);
   }, [existing]);
 
   const submit = async (event: FormEvent) => {
@@ -85,6 +87,7 @@ export function ProductForm() {
       description: description.trim() || undefined,
       imageUrl: imageUrl ?? undefined,
       isAvailable: available,
+      isAddOn: addOn,
     };
 
     try {
@@ -226,6 +229,39 @@ export function ProductForm() {
               className={[
                 'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
                 available ? 'left-6' : 'left-1',
+              ].join(' ')}
+            />
+          </button>
+        </div>
+
+        {/**
+         * An add-on is never found in search and never sold alone — buyers are offered it
+         * at checkout, beside a meal from this kitchen. Worded by what it is for, with an
+         * example, because "add-on" alone means different things to different vendors.
+         */}
+        <div className="flex items-center gap-3 rounded-2xl bg-surface p-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-bold text-ink">Add-on</p>
+            <p className="text-[12px] leading-snug text-ink-soft">
+              Sold only with a main item, e.g. drinks or extra protein. Buyers
+              are offered it at checkout instead of finding it in search.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddOn((current) => !current)}
+            role="switch"
+            aria-checked={addOn}
+            aria-label="Add-on"
+            className={[
+              'relative h-7 w-12 shrink-0 rounded-full transition',
+              addOn ? 'bg-brand' : 'bg-hairline',
+            ].join(' ')}
+          >
+            <span
+              className={[
+                'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
+                addOn ? 'left-6' : 'left-1',
               ].join(' ')}
             />
           </button>

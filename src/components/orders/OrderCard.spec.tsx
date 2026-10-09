@@ -55,6 +55,37 @@ const draw = (
 
 const musa = { name: 'Musa Bello', phone: '+2348011111111' };
 
+describe('OrderCard — add-ons', () => {
+  it('marks an extra so it is packed with the meal', () => {
+    draw('PAID', vi.fn(), {
+      items: [
+        {
+          id: 'i1',
+          productId: 'p1',
+          productName: 'Ofada Rice & Ayamase',
+          unitPrice: '3750.00',
+          quantity: 1,
+          lineTotal: '3750.00',
+        },
+        {
+          id: 'i2',
+          productId: 'p2',
+          productName: 'Bottled water',
+          unitPrice: '300.00',
+          quantity: 2,
+          lineTotal: '600.00',
+          isAddOn: true,
+        },
+      ],
+    });
+
+    expect(screen.getAllByText('Add-on')).toHaveLength(1);
+    expect(screen.getByText('Bottled water')).toContainElement(
+      screen.getByText('Add-on'),
+    );
+  });
+});
+
 describe('OrderCard', () => {
   it('offers "Mark ready" only on a paid order', async () => {
     const onMarkReady = draw('PAID');
