@@ -94,13 +94,19 @@ export interface VendorOrder {
     unitPrice: string;
     quantity: number;
     lineTotal: string;
+    /** Bought as an extra — pack it with the meal. Absent on older servers. */
+    isAddOn?: boolean;
   }[];
-  /** The payment this order was part of; may cover other vendors too. */
+  /**
+   * The payment this order was part of; may cover other vendors too. Narrowed by the
+   * server to what a vendor may see — never the basket's totals, which would show other
+   * sellers' shares.
+   */
   checkout: {
     id: string;
     reference: string;
-    totalAmount: string;
-    deliveryFee: string;
+    /** Who is coming to collect a delivery, once admin has assigned them. */
+    rider: { name: string; phone: string | null } | null;
   } | null;
 }
 
@@ -138,6 +144,12 @@ export interface Product {
   imageUrl: string | null;
   /** What buyers see. False hides it from search without deleting it. */
   isAvailable: boolean;
+  /**
+   * An extra — drinks, extra protein — sold only with a main item from this vendor.
+   * Kept out of search and offered to buyers at checkout. Absent from a server older
+   * than add-ons, which reads as false.
+   */
+  isAddOn?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -308,11 +320,7 @@ export interface PayoutAccount {
 }
 
 export type WithdrawalStatus =
-  | 'REQUESTED'
-  | 'PROCESSING'
-  | 'SETTLED'
-  | 'FAILED'
-  | 'REVERSED';
+  'REQUESTED' | 'PROCESSING' | 'SETTLED' | 'FAILED' | 'REVERSED';
 
 export interface Withdrawal {
   id: string;

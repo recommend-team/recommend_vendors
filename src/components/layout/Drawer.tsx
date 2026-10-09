@@ -37,7 +37,7 @@ export function Drawer({
 }) {
   const { user, logout } = useSession();
   const { data: profile } = useVendorProfile();
-  const { installed, reset } = useInstallPrompt();
+  const { kind, installed, install, reset } = useInstallPrompt();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -108,18 +108,29 @@ export function Drawer({
           style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
         >
           {/**
-           * The permanent way back to installing.
+           * The permanent way back to installing — on demand, from any screen.
            *
            * A vendor who swiped the banner away in the middle of a rush should not lose
-           * notifications for good — and on iOS there is no browser install button to
-           * fall back on, so without this there would be no route at all. It clears the
-           * dismissal and sends them to Orders, where the prompt explains the rest.
+           * notifications for good, and on iOS there is no browser install button to fall
+           * back on. So this clears the dismissal *and*, where Chrome gave us a prompt to
+           * replay, installs right here from the tap rather than routing to a banner and
+           * hoping. Only iOS and a spent prompt need the trip to Orders, because there
+           * the answer is instructions rather than a dialog.
+           *
+           * Hidden when `kind` is null: already installed, or a browser that cannot
+           * install at all. A button that provably does nothing is worse than no button —
+           * that was the original complaint.
            */}
-          {!installed && (
+          {!installed && kind !== null && (
             <button
               onClick={() => {
                 reset();
-                navigate('/orders');
+                if (kind === 'native') {
+                  install();
+                  onClose();
+                } else {
+                  navigate('/orders');
+                }
               }}
               className="min-h-12 w-full rounded-full bg-mint text-[15px] font-bold text-brand"
             >

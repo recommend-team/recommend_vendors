@@ -2,6 +2,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { StatusPill } from '../components/ui/StatusPill';
 import { useMarkReady, useOrders } from '../hooks/useOrders';
 import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
+import { CollectionCheck } from '../components/orders/CollectionCheck';
+import { AddOnTag } from '../components/orders/AddOnTag';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -90,6 +92,7 @@ export function OrderDetail() {
                 </span>
                 <span className="min-w-0 flex-1 text-ink">
                   {item.productName}
+                  {item.isAddOn && <AddOnTag />}
                 </span>
                 <span className="shrink-0 text-ink-soft">
                   {formatNaira(item.lineTotal)}
@@ -125,6 +128,32 @@ export function OrderDetail() {
             </p>
           )}
         </section>
+
+        {/* Ready and waiting at the counter: check the buyer's code before handing over. */}
+        {order.fulfillmentType === 'PICKUP' && order.status === 'READY' && (
+          <CollectionCheck orderId={order.id} />
+        )}
+
+        {/* Who admin has sent to collect a delivery — so the vendor hands it to the right
+            person, and can call them if they're late. */}
+        {order.fulfillmentType === 'DELIVERY' && order.checkout?.rider && (
+          <section className="rounded-2xl bg-surface p-4 shadow-sm">
+            <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">
+              Rider
+            </h2>
+            <p className="mt-2 text-[15px] font-bold text-ink">
+              {order.checkout.rider.name}
+            </p>
+            {order.checkout.rider.phone && (
+              <a
+                href={`tel:${order.checkout.rider.phone}`}
+                className="mt-0.5 inline-block text-[14px] font-bold text-accent"
+              >
+                {order.checkout.rider.phone}
+              </a>
+            )}
+          </section>
+        )}
 
         <section className="rounded-2xl bg-surface p-4 shadow-sm">
           <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">

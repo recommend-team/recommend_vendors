@@ -41,3 +41,26 @@ export function markOrderReady(orderId: string): Promise<null> {
     method: 'PATCH',
   });
 }
+
+export interface CollectionCheck {
+  matches: boolean;
+  /** Who should be at the counter — so the vendor can see it is them. */
+  buyerName: string;
+  attemptsLeft: number;
+}
+
+/**
+ * The counter check on a pickup: is the code the buyer is showing this order's?
+ *
+ * Only answers — it marks nothing collected. Confirming receipt stays with the buyer, so
+ * checking a code cannot release a vendor's own pay.
+ */
+export function checkCollectionCode(
+  orderId: string,
+  code: string,
+): Promise<CollectionCheck> {
+  return request<CollectionCheck>(
+    `/sellers/orders/${encodeURIComponent(orderId)}/check-code`,
+    { method: 'POST', body: JSON.stringify({ code }) },
+  );
+}

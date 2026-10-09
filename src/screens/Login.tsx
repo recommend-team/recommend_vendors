@@ -58,9 +58,7 @@ export function Login() {
   return (
     <div className="flex min-h-full flex-col bg-canvas px-6 pt-14 pb-8">
       <header className="text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-extrabold text-white">
-          R
-        </span>
+        <img src="/logo-mark.svg" alt="" className="mx-auto h-14 w-auto" />
         <p className="mt-3 text-xl font-extrabold text-accent">Recommend</p>
         <p className="text-[10px] font-bold tracking-[0.2em] text-ink-faint uppercase">
           For Vendors

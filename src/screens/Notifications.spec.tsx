@@ -16,6 +16,11 @@ vi.mock('../hooks/useNotifications', () => ({
   useMarkAllRead: () => ({ mutateAsync: markAll, isPending: false }),
 }));
 
+const playChime = vi.fn(() => true);
+vi.mock('../components/alerts/chime', () => ({
+  playChime: () => playChime(),
+}));
+
 vi.mock('react-router-dom', async () => {
   const actual =
     await vi.importActual<typeof import('react-router-dom')>(
@@ -132,5 +137,39 @@ describe('Notifications', () => {
     setup([], 0);
 
     expect(screen.getByText(/orders, payments and withdrawals/i)).toBeVisible();
+  });
+
+  describe('the alert sound', () => {
+    it('is on until switched off', () => {
+      setup([], 0);
+
+      expect(screen.getByRole('switch', { name: 'Alert sound' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+
+    it('remembers being switched off, on this device', async () => {
+      setup([], 0);
+
+      await userEvent.click(screen.getByRole('switch', { name: 'Alert sound' }));
+
+      expect(screen.getByRole('switch', { name: 'Alert sound' })).toHaveAttribute(
+        'aria-checked',
+        'false',
+      );
+      expect(localStorage.getItem('recommend.vendor.alertSoundMuted')).toBe('1');
+      expect(playChime).not.toHaveBeenCalled();
+    });
+
+    it('plays the chime when switched back on, so the vendor knows what to listen for', async () => {
+      localStorage.setItem('recommend.vendor.alertSoundMuted', '1');
+      setup([], 0);
+
+      await userEvent.click(screen.getByRole('switch', { name: 'Alert sound' }));
+
+      expect(playChime).toHaveBeenCalledTimes(1);
+      expect(localStorage.getItem('recommend.vendor.alertSoundMuted')).toBeNull();
+    });
   });
 });

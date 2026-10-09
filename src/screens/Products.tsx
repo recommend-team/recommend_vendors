@@ -7,7 +7,7 @@ import { useProducts, useToggleAvailability } from '../hooks/useProducts';
 import { useSession } from '../hooks/useSession';
 import type { Product } from '../lib/contract';
 
-type Filter = 'all' | 'inStock' | 'outOfStock';
+type Filter = 'all' | 'inStock' | 'outOfStock' | 'addOns';
 
 /**
  * The catalogue.
@@ -41,6 +41,7 @@ export function Products() {
   const visible = products.filter((product) => {
     if (filter === 'inStock' && !product.isAvailable) return false;
     if (filter === 'outOfStock' && product.isAvailable) return false;
+    if (filter === 'addOns' && !product.isAddOn) return false;
     if (!search) return true;
 
     const needle = search.toLowerCase();
@@ -93,7 +94,7 @@ export function Products() {
           />
         </div>
 
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
             All Items
           </Chip>
@@ -108,6 +109,12 @@ export function Products() {
             onClick={() => setFilter('outOfStock')}
           >
             Out of Stock
+          </Chip>
+          <Chip
+            active={filter === 'addOns'}
+            onClick={() => setFilter('addOns')}
+          >
+            Add-ons
           </Chip>
         </div>
       </div>
@@ -243,8 +250,13 @@ function ProductRow({
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-extrabold text-ink">
-            {product.name}
+          <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-extrabold text-ink">
+            <span className="truncate">{product.name}</span>
+            {product.isAddOn && (
+              <span className="shrink-0 rounded-full bg-mint px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-brand uppercase">
+                Add-on
+              </span>
+            )}
           </p>
           <p className="mt-0.5 text-[15px] font-extrabold text-accent">
             {formatNaira(product.price)}

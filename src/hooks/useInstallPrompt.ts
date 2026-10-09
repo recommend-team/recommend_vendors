@@ -1,89 +1,55 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import {
   forgetDismissed,
-  isInstalled,
-  isIosSafari,
+  getInstallState,
+  getServerInstallState,
+  promptInstall,
   rememberDismissed,
-  wasDismissed,
-  type InstallPromptEvent,
+  subscribe,
+  type InstallKind,
 } from '../lib/install';
 
 export interface UseInstallPrompt {
-  /** 'native' can be installed with one tap; 'ios' can only be talked through it. */
-  kind: 'native' | 'ios' | null;
+  /**
+   * How installing is possible right now — a capability, not a suggestion.
+   *
+   * Deliberately independent of `dismissed`: waving the banner away should quieten the
+   * banner, not remove the drawer's ability to install. Callers that render a *prompt*
+   * check `dismissed` themselves; callers that render a *control* do not.
+   */
+  kind: InstallKind;
   /** True once it runs from the home screen — the gate iOS push sits behind. */
   installed: boolean;
+  /** Whether our banner was waved away. Shared across every caller, live. */
+  dismissed: boolean;
+  /** Replay Chrome's prompt. Call from a tap; a no-op unless `kind` is `'native'`. */
   install: () => void;
   dismiss: () => void;
-  /** Undo a dismissal, so the drawer can bring the prompt back. */
+  /** Undo a dismissal, so the banner comes back. */
   reset: () => void;
 }
 
 /**
  * Whether — and how — this vendor can put Recommend on their home screen.
  *
- * `kind` is null when there is nothing useful to offer: already installed, previously
- * declined, or a browser that cannot install at all. Callers render nothing in that case
- * rather than showing a button that would do nothing.
+ * All of the state lives in `lib/install`, which starts listening at import time. This
+ * is only a subscription, and that is the fix: `beforeinstallprompt` fires once per
+ * document, so a listener that came and went with a component missed it outright. Every
+ * caller here now sees the same event, whenever it arrived and whatever was on screen.
  */
 export function useInstallPrompt(): UseInstallPrompt {
-  const [deferred, setDeferred] = useState<InstallPromptEvent | null>(null);
-  const [dismissed, setDismissed] = useState(() => wasDismissed());
-  const [installed, setInstalled] = useState(() => isInstalled());
-
-  useEffect(() => {
-    const onBeforeInstall = (event: Event) => {
-      // Chrome would otherwise show its own mini-infobar at a moment of its choosing.
-      // Holding the event lets us ask once the vendor has seen what the app does.
-      event.preventDefault();
-      setDeferred(event as InstallPromptEvent);
-    };
-
-    // Fires whether they installed from our button or the browser's own menu.
-    const onInstalled = () => {
-      setInstalled(true);
-      setDeferred(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    window.addEventListener('appinstalled', onInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
-  }, []);
+  const state = useSyncExternalStore(
+    subscribe,
+    getInstallState,
+    getServerInstallState,
+  );
 
   const install = useCallback(() => {
-    if (!deferred) return;
-
-    void deferred.prompt();
-    void deferred.userChoice.then(() => {
-      // Single-use either way, so the banner goes for now. Notably we do *not* remember
-      // a "no" here: backing out of the browser's own dialog is not the same as
-      // declining ours. Someone who tapped Add and then mis-tapped, got interrupted, or
-      // simply hesitated has shown interest, and holding that against them forever
-      // would be the wrong reading. Chrome fires a fresh event on a later visit and the
-      // banner comes back with it.
-      setDeferred(null);
-    });
-  }, [deferred]);
-
-  const dismiss = useCallback(() => {
-    rememberDismissed();
-    setDismissed(true);
+    void promptInstall();
   }, []);
 
-  const reset = useCallback(() => {
-    forgetDismissed();
-    setDismissed(false);
-  }, []);
+  const dismiss = useCallback(() => rememberDismissed(), []);
+  const reset = useCallback(() => forgetDismissed(), []);
 
-  const base = { installed, install, dismiss, reset };
-
-  if (installed || dismissed) return { kind: null, ...base };
-  if (deferred) return { kind: 'native', ...base };
-  if (isIosSafari()) return { kind: 'ios', ...base };
-
-  return { kind: null, ...base };
+  return { ...state, install, dismiss, reset };
 }

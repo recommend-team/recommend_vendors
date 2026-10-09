@@ -15,8 +15,13 @@ export default defineConfig({
       // vendor mid-service to swap a service worker is a bad trade. An update is offered
       // instead, and an ignored one still lands on the next cold start.
       registerType: 'prompt',
-      // No service worker in dev. PWA behaviour is exercised against a build.
-      devOptions: { enabled: false },
+      // Our own worker (`src/sw.ts`) rather than a generated one: the generated worker has
+      // no `push` handler, so pushed orders were never shown. See the top of `sw.ts`.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      // On in dev, so push can be tried on localhost. A dev worker is an ES module.
+      devOptions: { enabled: true, type: 'module' },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Recommend for Vendors',
@@ -41,11 +46,11 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+      injectManifest: {
         // Orders change by the minute and money must never be read from a cache — only
-        // the shell is precached.
-        navigateFallbackDenylist: [/^\/api/],
+        // the shell is precached. `/api` is kept out of navigation in `sw.ts`.
+        // mp3: the notification sound (public/sounds) — cached so it plays offline too.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,mp3}'],
       },
     }),
   ],

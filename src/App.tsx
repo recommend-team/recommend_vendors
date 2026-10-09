@@ -12,6 +12,7 @@ import { AppBar } from './components/layout/AppBar';
 import { Drawer } from './components/layout/Drawer';
 import { BottomNav } from './components/layout/BottomNav';
 import { UpdateToast } from './components/UpdateToast';
+import { NotificationAlerts } from './components/alerts/NotificationAlerts';
 import { Welcome } from './screens/Welcome';
 import { Login } from './screens/Login';
 import { SignUp } from './screens/SignUp';
@@ -104,6 +105,7 @@ function RequireAuth() {
       </div>
       <BottomNav />
       <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <NotificationAlerts />
     </div>
   );
 }
@@ -124,9 +126,7 @@ function PublicOnly() {
 function Splash() {
   return (
     <div className="grid h-full place-items-center bg-canvas">
-      <span className="grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-extrabold text-white">
-        R
-      </span>
+      <img src="/logo-mark.svg" alt="Recommend" className="h-14 w-auto" />
     </div>
   );
 }
