@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { AlertsPrompt } from './AlertsPrompt';
+import { AlertsPrompt, InstallPrompt } from './AlertsPrompt';
 import type { PushState } from '../lib/push';
 import type { UseInstallPrompt } from '../hooks/useInstallPrompt';
 
@@ -50,7 +50,9 @@ describe('AlertsPrompt', () => {
   it('tells an iPhone vendor to install, rather than showing nothing', () => {
     setup({ state: 'unsupported', canAsk: false, kind: 'ios' });
 
-    expect(screen.getByText(/add recommend to your home screen/i)).toBeVisible();
+    expect(
+      screen.getByText(/add recommend to your home screen/i),
+    ).toBeVisible();
     expect(screen.getByText(/add to home screen/i)).toBeVisible();
   });
 
@@ -108,9 +110,16 @@ describe('AlertsPrompt', () => {
   it('tells an iPhone vendor to install even with no orders yet', () => {
     // Safari cannot push to a tab at all, so installing is the precondition rather than
     // a nicety — withholding it until an order arrives is a deadlock.
-    setup({ state: 'unsupported', canAsk: false, kind: 'ios', askForPush: false });
+    setup({
+      state: 'unsupported',
+      canAsk: false,
+      kind: 'ios',
+      askForPush: false,
+    });
 
-    expect(screen.getByText(/add recommend to your home screen/i)).toBeVisible();
+    expect(
+      screen.getByText(/add recommend to your home screen/i),
+    ).toBeVisible();
   });
 
   it('does not explain a refusal to someone never asked', () => {
@@ -143,5 +152,52 @@ describe('AlertsPrompt', () => {
     expect(
       screen.queryByRole('button', { name: /add to home screen/i }),
     ).toBeNull();
+  });
+});
+
+describe('InstallPrompt', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function setupInstall(kind: UseInstallPrompt['kind'], dismissed = false) {
+    install.mockReturnValue({
+      kind,
+      installed: false,
+      dismissed,
+      install: vi.fn(),
+      dismiss: vi.fn(),
+      reset: vi.fn(),
+    });
+    render(<InstallPrompt />);
+  }
+
+  it('offers one-tap install before signing in, with no notification talk', () => {
+    setupInstall('native');
+
+    expect(
+      screen.getByRole('button', { name: /add to home screen/i }),
+    ).toBeVisible();
+    expect(screen.queryByText(/notifications/i)).toBeNull();
+    // Signed out, there is no push to ask about — it must not be consulted at all.
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('describes the Share sheet on an iPhone', () => {
+    setupInstall('ios');
+
+    expect(screen.getByText(/tap share/i)).toBeVisible();
+  });
+
+  it('respects a "Not now" given anywhere else', () => {
+    setupInstall('native', true);
+
+    expect(
+      screen.queryByRole('button', { name: /add to home screen/i }),
+    ).toBeNull();
+  });
+
+  it('renders nothing where the browser cannot install', () => {
+    setupInstall(null);
+
+    expect(screen.queryByText(/home screen/i)).toBeNull();
   });
 });

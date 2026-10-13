@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { InstallPrompt } from '../components/AlertsPrompt';
 import { ChoiceCard } from '../components/ui/ChoiceCard';
 import { Field, PasswordField } from '../components/ui/Field';
 import { Stepper } from '../components/ui/Stepper';
@@ -366,6 +367,10 @@ export function SignUp() {
               </Link>
             </p>
           )}
+
+          {/* First step only: by step two they are mid-form, and a card under the
+              Continue button is one more thing between them and finishing. */}
+          {step === 1 && <InstallPrompt className="mt-6" />}
         </div>
       </form>
     </div>

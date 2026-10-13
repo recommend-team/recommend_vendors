@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { InstallPrompt } from '../components/AlertsPrompt';
 
 /**
  * The way in, from the reference: deep green, one cream card, two choices.
@@ -41,6 +42,8 @@ export function Welcome() {
           Sell to buyers already looking for what you have
         </p>
       </div>
+
+      <InstallPrompt className="mt-4" />
 
       <footer className="mt-auto flex justify-center gap-6 pt-10 text-[12px] text-white/60">
         <Link to="/guide">How it works</Link>
