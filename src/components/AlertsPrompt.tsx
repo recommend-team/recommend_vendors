@@ -37,17 +37,7 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
   // 1. No prompt to replay. On iOS push is impossible until this is done, so it is the
   //    only ask; on Chrome it is the way back after the native dialog was backed out of.
   if (offerInstall && (install.kind === 'ios' || install.kind === 'manual')) {
-    return (
-      <Card
-        title="Add Recommend to your home screen"
-        body={
-          install.kind === 'ios'
-            ? 'On iPhone, we can only alert you about new orders once the app is on your home screen. Tap Share at the bottom of Safari, then “Add to Home Screen”.'
-            : 'Open your browser menu (⋮) and tap “Install app” to keep Recommend on your home screen — it opens straight to your orders.'
-        }
-        onDismiss={install.dismiss}
-      />
-    );
+    return <InstallPrompt />;
   }
 
   // 2. Push can be asked for, and they have earned the right to be asked.
@@ -73,14 +63,7 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
 
   // 3. Nothing to ask about, but it can still be installed — worth it on its own.
   if (offerInstall && install.kind === 'native') {
-    return (
-      <Card
-        title="Add Recommend to your home screen"
-        body="Opens like an app, straight to your orders — no browser, no typing the address."
-        onDismiss={install.dismiss}
-        action={{ label: 'Add to home screen', onClick: install.install }}
-      />
-    );
+    return <InstallPrompt />;
   }
 
   // 4. Refused. Browsers never re-prompt, so this is the only way they learn why — but
@@ -97,21 +80,66 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
   return null;
 }
 
+/**
+ * The install half of the above, on its own — for the signed-out screens.
+ *
+ * Offered before signup on purpose: installing costs nothing to refuse, and a vendor who
+ * installs first signs up inside the app they will use, rather than in a tab they lose.
+ * Notifications stay out of it; those wait for a first order (see above).
+ *
+ * Shares the one dismissal with the Orders card, so "Not now" on Welcome is not asked
+ * again on every screen after it. The drawer still installs on demand.
+ */
+export function InstallPrompt({ className }: { className?: string }) {
+  const install = useInstallPrompt();
+
+  if (install.dismissed || install.kind === null) return null;
+
+  if (install.kind === 'native') {
+    return (
+      <Card
+        className={className}
+        title="Add Recommend to your home screen"
+        body="Opens like an app, straight to your orders — no browser, no typing the address."
+        onDismiss={install.dismiss}
+        action={{ label: 'Add to home screen', onClick: install.install }}
+      />
+    );
+  }
+
+  return (
+    <Card
+      className={className}
+      title="Add Recommend to your home screen"
+      body={
+        install.kind === 'ios'
+          ? 'On iPhone, we can only alert you about new orders once the app is on your home screen. Tap Share at the bottom of Safari, then “Add to Home Screen”.'
+          : 'Open your browser menu (⋮) and tap “Install app” to keep Recommend on your home screen — it opens straight to your orders.'
+      }
+      onDismiss={install.dismiss}
+    />
+  );
+}
+
 function Card({
   title,
   body,
   action,
   secondary,
   onDismiss,
+  className = 'mx-4 mt-3',
 }: {
   title: string;
   body: string;
   action?: { label: string; onClick: () => void; disabled?: boolean };
   secondary?: { label: string; onClick: () => void };
   onDismiss: () => void;
+  className?: string;
 }) {
   return (
-    <div className="mx-4 mt-3 rounded-2xl bg-surface p-4 shadow-sm">
+    <div
+      className={`${className} rounded-2xl bg-surface p-4 text-left shadow-sm`}
+    >
       <p className="text-[14px] font-extrabold text-ink">{title}</p>
       <p className="mt-1 text-[13px] leading-snug text-ink-soft">{body}</p>
 
