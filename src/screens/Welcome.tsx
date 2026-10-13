@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 
 /**
@@ -43,7 +43,7 @@ export function Welcome() {
       </div>
 
       <footer className="mt-auto flex justify-center gap-6 pt-10 text-[12px] text-white/60">
-        <span>Help &amp; Support</span>
+        <Link to="/guide">How it works</Link>
         <span>Resources</span>
       </footer>
     </div>

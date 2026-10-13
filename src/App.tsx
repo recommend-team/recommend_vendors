@@ -31,6 +31,7 @@ import { Wallet } from './screens/Wallet';
 import { Withdraw } from './screens/Withdraw';
 import { Notifications } from './screens/Notifications';
 import { Earnings } from './screens/Earnings';
+import { Guide } from './screens/Guide';
 import { ApprovalBanner } from './components/ApprovalBanner';
 
 export function App() {
@@ -66,6 +67,9 @@ export function App() {
               <Route path="/products/:id" element={<ProductForm />} />
               <Route path="/kyc" element={<Kyc />} />
             </Route>
+
+            {/* Outside both guards: readable before signing up and after, at one URL. */}
+            <Route path="/guide" element={<Guide />} />
 
             <Route path="*" element={<Navigate to="/orders" replace />} />
           </Routes>
