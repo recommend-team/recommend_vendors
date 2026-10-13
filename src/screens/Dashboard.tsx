@@ -44,7 +44,13 @@ export function Dashboard() {
         </h1>
 
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber px-3 py-1.5 text-[11px] font-bold text-ink-soft">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
+          >
             <path
               d="M12 3l8 3v6c0 4.4-3.4 8.3-8 9-4.6-.7-8-4.6-8-9V6l8-3z"
               stroke="currentColor"
@@ -141,7 +147,7 @@ export function Dashboard() {
             </p>
           ) : (
             <p className="mt-2 text-[12px] text-ink-soft">
-              After the platform fee. 
+              After the platform fee.
             </p>
           )}
         </section>
@@ -183,7 +189,13 @@ export function Dashboard() {
             to="/products/new"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent px-4 text-[14px] font-bold text-white active:scale-[0.99]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
               <path
                 d="M12 5v14M5 12h14"
                 stroke="currentColor"
@@ -197,7 +209,13 @@ export function Dashboard() {
             to="/products"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-mint px-4 text-[14px] font-bold text-brand active:scale-[0.99]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
               <path
                 d="M4 6h16M4 12h16M4 18h10"
                 stroke="currentColor"
@@ -240,6 +258,16 @@ export function Dashboard() {
             in helps buyers find and trust you.
           </p>
         )}
+
+        <Link
+          to="/guide"
+          className="block px-1 pb-2 text-[12px] leading-snug text-ink-soft"
+        >
+          New here?{' '}
+          <span className="font-bold text-accent">
+            See how Recommend works and what it costs
+          </span>
+        </Link>
       </div>
 
       <Fab to="/products/new" label="Add a product" />

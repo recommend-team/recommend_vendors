@@ -26,6 +26,11 @@ const LINKS: { to: string; label: string; hint: string }[] = [
   },
   { to: '/earnings', label: 'Sales', hint: 'Month by month' },
   { to: '/kyc', label: 'Documents', hint: 'Verification' },
+  {
+    to: '/guide',
+    label: 'How Recommend works',
+    hint: 'Products, orders, fees',
+  },
 ];
 
 export function Drawer({

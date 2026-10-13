@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 import { ImageUpload } from '../components/ui/ImageUpload';
@@ -11,6 +11,8 @@ import {
 } from '../hooks/useProducts';
 import { ApiError } from '../lib/api';
 import { requiredProblem } from '../lib/validate';
+import { PLATFORM_FEE_PERCENT, vendorShare } from '../lib/fees';
+import { formatNaira } from '../lib/format';
 
 /**
  * Adding or editing one product.
@@ -118,7 +120,13 @@ export function ProductForm() {
           aria-label="Back"
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-accent active:bg-black/5"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
+          >
             <path
               d="M15 5l-7 7 7 7"
               stroke="currentColor"
@@ -141,7 +149,9 @@ export function ProductForm() {
             <h2 className="text-[14px] font-extrabold text-ink">
               Product media
             </h2>
-            <span className="text-[12px] font-bold text-brand">Recommended</span>
+            <span className="text-[12px] font-bold text-brand">
+              Recommended
+            </span>
           </div>
           <ImageUpload value={imageUrl} onChange={setImageUrl} />
         </section>
@@ -155,13 +165,19 @@ export function ProductForm() {
                 strokeWidth="1.7"
                 strokeLinejoin="round"
               />
-              <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+              <circle
+                cx="12"
+                cy="10"
+                r="2.4"
+                stroke="currentColor"
+                strokeWidth="1.7"
+              />
             </svg>
           </span>
           <span>
             <span className="font-extrabold">Pro-tip </span>
-            Daylight and a plain background sell better than a styled photo. Shoot
-            the food itself, close up, with nothing behind it.
+            Daylight and a plain background sell better than a styled photo.
+            Shoot the food itself, close up, with nothing behind it.
           </span>
         </p>
 
@@ -182,10 +198,26 @@ export function ProductForm() {
           inputMode="decimal"
           placeholder="3500"
           value={price}
-          onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ''))}
+          onChange={(event) =>
+            setPrice(event.target.value.replace(/[^\d.]/g, ''))
+          }
           error={errors.price}
           hint={<span className="text-[13px] text-ink-faint">₦</span>}
         />
+        {/* The fee, at the moment of pricing — learning it from the wallet afterwards is
+            the surprise this line exists to prevent. */}
+        {Number(price) > 0 && (
+          <p className="-mt-2 px-4 text-[12px] leading-snug text-ink-soft">
+            You receive{' '}
+            <span className="font-bold text-ink">
+              {formatNaira(vendorShare(Number(price)))}
+            </span>{' '}
+            after Recommend&apos;s {PLATFORM_FEE_PERCENT}% fee.{' '}
+            <Link to="/guide" className="font-bold text-accent">
+              How fees work
+            </Link>
+          </p>
+        )}
 
         <div>
           <label
@@ -281,8 +313,8 @@ export function ProductForm() {
             <div className="rounded-2xl bg-surface p-4">
               <p className="text-[14px] font-bold text-ink">Delete {name}?</p>
               <p className="mt-1 text-[13px] leading-snug text-ink-soft">
-                Buyers won&apos;t see it again. Past orders keep their own record,
-                so nothing already sold is affected.
+                Buyers won&apos;t see it again. Past orders keep their own
+                record, so nothing already sold is affected.
               </p>
               <div className="mt-3 flex gap-2">
                 <button
@@ -317,7 +349,13 @@ export function ProductForm() {
                   aria-label="Delete this product"
                   className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-amber text-ink-soft active:scale-95"
                 >
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden
+                  >
                     <path
                       d="M5 7h14M10 7V5h4v2m-7 0 1 13h8l1-13"
                       stroke="currentColor"
