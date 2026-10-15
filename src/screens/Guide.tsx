@@ -34,7 +34,7 @@ export function Guide() {
 
       <div className="flex-1 space-y-3 px-4 pb-8">
         <p className="px-1 text-[14px] leading-relaxed text-ink-soft">
-          Recommend puts your kitchen in front of buyers already looking for
+          Recommend puts your products in front of buyers already looking for
           food in your area. You list what you sell, buyers pay up front, and
           you get paid once they receive it.
         </p>
