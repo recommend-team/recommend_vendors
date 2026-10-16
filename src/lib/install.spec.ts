@@ -1,7 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   forgetDismissed,
   getInstallState,
+  iosBrowser,
   promptInstall,
   rememberDismissed,
   resetInstallStoreForTests,
@@ -144,5 +145,56 @@ describe('install store', () => {
 
     expect(listener).toHaveBeenCalled();
     expect(getInstallState().dismissed).toBe(false);
+  });
+});
+
+/**
+ * Every iOS browser installs through Share → Add to Home Screen (Chrome, Edge and Firefox
+ * since iOS 16.4) — only in-app browsers cannot. Treating Chrome on iPhone as unable to
+ * install hid the prompt from exactly the vendors who need it for order alerts.
+ */
+describe('iosBrowser', () => {
+  const IPHONE =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)';
+  const AGENTS = {
+    safari: `${IPHONE} Version/18.5 Mobile/15E148 Safari/604.1`,
+    chrome: `${IPHONE} CriOS/138.0.7204.119 Mobile/15E148 Safari/604.1`,
+    edge: `${IPHONE} Version/18.0 EdgiOS/138.0.3351.95 Mobile/15E148 Safari/605.1.15`,
+    firefox: `${IPHONE} FxiOS/141.0 Mobile/15E148 Safari/605.1.15`,
+    instagram: `${IPHONE} Mobile/15E148 Instagram 390.0.0.28.85 (iPhone15,2; iOS 18_5; en_US)`,
+    facebook: `${IPHONE} Mobile/15E148 [FBAN/FBIOS;FBAV/520.0.0.38.101;FBBV/1]`,
+    android:
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36',
+  };
+
+  function as(ua: string) {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua);
+    resetInstallStoreForTests();
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetInstallStoreForTests();
+  });
+
+  it.each([
+    ['safari', 'safari', 'ios'],
+    ['chrome', 'other', 'ios-browser'],
+    ['edge', 'other', 'ios-browser'],
+    ['firefox', 'other', 'ios-browser'],
+    ['instagram', 'in-app', 'ios-in-app'],
+    ['facebook', 'in-app', 'ios-in-app'],
+  ] as const)('classifies %s on iPhone', (agent, browser, kind) => {
+    as(AGENTS[agent]);
+
+    expect(iosBrowser()).toBe(browser);
+    expect(getInstallState().kind).toBe(kind);
+  });
+
+  it('is not iOS on Android', () => {
+    as(AGENTS.android);
+
+    expect(iosBrowser()).toBeNull();
+    expect(getInstallState().kind).toBeNull();
   });
 });

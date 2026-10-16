@@ -119,7 +119,7 @@ export function Drawer({
            * notifications for good, and on iOS there is no browser install button to fall
            * back on. So this clears the dismissal *and*, where Chrome gave us a prompt to
            * replay, installs right here from the tap rather than routing to a banner and
-           * hoping. Only iOS and a spent prompt need the trip to Orders, because there
+           * hoping. Only iOS (any browser) and a spent prompt need the trip to Orders, because there
            * the answer is instructions rather than a dialog.
            *
            * Hidden when `kind` is null: already installed, or a browser that cannot

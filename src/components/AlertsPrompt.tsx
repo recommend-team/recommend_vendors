@@ -1,5 +1,6 @@
 import { usePush } from '../hooks/usePush';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import type { InstallKind } from '../lib/install';
 
 /**
  * The one place that answers "why am I not being told about orders?".
@@ -10,7 +11,7 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt';
  * and no explanation. Since installing is the *precondition* for alerts rather than a
  * parallel suggestion, both live behind one decision here, in priority order:
  *
- * 1. **Installable by hand** — iOS, or a Chrome whose prompt we have already spent.
+ * 1. **Installable by hand** — any iOS browser, or a Chrome whose prompt we have spent.
  *    Nothing else can be offered as a button, so say where the menu is.
  * 2. **Push available** — ask, and offer one-tap install alongside if Chrome allows it.
  *    Push works in an Android tab, so installing is never made a barrier to it.
@@ -36,7 +37,7 @@ export function AlertsPrompt({ askForPush }: { askForPush: boolean }) {
 
   // 1. No prompt to replay. On iOS push is impossible until this is done, so it is the
   //    only ask; on Chrome it is the way back after the native dialog was backed out of.
-  if (offerInstall && (install.kind === 'ios' || install.kind === 'manual')) {
+  if (offerInstall && install.kind !== null && install.kind !== 'native') {
     return <InstallPrompt />;
   }
 
@@ -111,15 +112,25 @@ export function InstallPrompt({ className }: { className?: string }) {
     <Card
       className={className}
       title="Add Recommend to your home screen"
-      body={
-        install.kind === 'ios'
-          ? 'On iPhone, we can only alert you about new orders once the app is on your home screen. Tap Share at the bottom of Safari, then “Add to Home Screen”.'
-          : 'Open your browser menu (⋮) and tap “Install app” to keep Recommend on your home screen — it opens straight to your orders.'
-      }
+      body={MANUAL_STEPS[install.kind]}
       onDismiss={install.dismiss}
     />
   );
 }
+
+const IPHONE_WHY =
+  'On iPhone, we can only alert you about new orders once the app is on your home screen.';
+
+/** Where the install route is, for every browser that cannot be installed with a tap. */
+const MANUAL_STEPS: Record<Exclude<InstallKind, 'native' | null>, string> = {
+  // Share sits in the bottom bar, or behind ••• in Safari's compact tab layout.
+  ios: `${IPHONE_WHY} In Safari, tap Share (under ••• if you don’t see it), then “Add to Home Screen”.`,
+  'ios-browser': `${IPHONE_WHY} Tap Share in your browser’s address bar or menu, then “Add to Home Screen”. Not there? Open this page in Safari.`,
+  'ios-in-app':
+    'This page is open inside another app, which can’t add Recommend to your home screen. Open it in Safari (look for “Open in browser” in the ••• menu), then tap Share → “Add to Home Screen”.',
+  manual:
+    'Open your browser menu (⋮) and tap “Install app” to keep Recommend on your home screen — it opens straight to your orders.',
+};
 
 function Card({
   title,

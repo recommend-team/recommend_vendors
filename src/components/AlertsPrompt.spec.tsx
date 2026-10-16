@@ -56,6 +56,15 @@ describe('AlertsPrompt', () => {
     expect(screen.getByText(/add to home screen/i)).toBeVisible();
   });
 
+  it('tells an iPhone vendor on Chrome to install too', () => {
+    // Chrome on iOS installs through its own Share since iOS 16.4 — it used to get nothing.
+    setup({ state: 'unsupported', canAsk: false, kind: 'ios-browser' });
+
+    expect(
+      screen.getByText(/add recommend to your home screen/i),
+    ).toBeVisible();
+  });
+
   it('asks for notifications when it can, without making install a barrier', () => {
     // Android in a tab: push works uninstalled, so the ask must not be gated behind it.
     setup({ canAsk: true, kind: 'native' });
@@ -185,6 +194,19 @@ describe('InstallPrompt', () => {
     setupInstall('ios');
 
     expect(screen.getByText(/tap share/i)).toBeVisible();
+  });
+
+  it('points Chrome on an iPhone at its own Share, with Safari as the fallback', () => {
+    setupInstall('ios-browser');
+
+    expect(screen.getByText(/address bar or menu/i)).toBeVisible();
+    expect(screen.getByText(/open this page in safari/i)).toBeVisible();
+  });
+
+  it('sends an in-app browser to Safari rather than to a Share sheet it lacks', () => {
+    setupInstall('ios-in-app');
+
+    expect(screen.getByText(/open it in safari/i)).toBeVisible();
   });
 
   it('respects a "Not now" given anywhere else', () => {
