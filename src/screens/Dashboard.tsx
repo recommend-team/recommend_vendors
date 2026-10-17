@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Fab } from '../components/ui/Fab';
+import { ShopLinkCard } from '../components/ShopLinkCard';
 import { formatAgo, formatNaira, orderLabel } from '../lib/format';
 import {
   useEarnings,
@@ -104,6 +105,11 @@ export function Dashboard() {
             />
           </button>
         </div>
+
+        {/* A full link only — an older server sent a bare path, useless to share. */}
+        {profile?.storefrontUrl?.startsWith('http') && (
+          <ShopLinkCard url={profile.storefrontUrl} />
+        )}
 
         <section className="rounded-2xl bg-amber p-5">
           <div className="flex items-start justify-between gap-3">
