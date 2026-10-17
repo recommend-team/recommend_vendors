@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Fab } from '../components/ui/Fab';
 import { ShopLinkCard } from '../components/ShopLinkCard';
+import { useSuspended } from '../hooks/useSuspended';
 import { formatAgo, formatNaira, orderLabel } from '../lib/format';
 import {
   useEarnings,
@@ -30,6 +31,7 @@ export function Dashboard() {
   const { orders, awaitingCount } = useOrders('active');
   const { total: productCount } = useProducts();
   const update = useUpdateProfile();
+  const suspended = useSuspended();
 
   const open = profile?.isOpen ?? false;
   const trend = monthOnMonth(earnings);
@@ -88,7 +90,7 @@ export function Dashboard() {
           </div>
           <button
             onClick={() => update.mutate({ isOpen: !open })}
-            disabled={isLoading || update.isPending}
+            disabled={isLoading || update.isPending || suspended}
             role="switch"
             aria-checked={open}
             aria-label={open ? 'Close the shop' : 'Open the shop'}
@@ -276,7 +278,7 @@ export function Dashboard() {
         </Link>
       </div>
 
-      <Fab to="/products/new" label="Add a product" />
+      {!suspended && <Fab to="/products/new" label="Add a product" />}
     </div>
   );
 }

@@ -148,3 +148,19 @@ describe('destinationFor', () => {
     expect(destinationFor(note({ type: 'WITHDRAWAL_FAILED' }))).toBe('/wallet');
   });
 });
+
+describe('destinationFor — changes Recommend made', () => {
+  const changed = (url: unknown) =>
+    note({ type: 'STORE_UPDATED_BY_ADMIN', data: { url } });
+
+  it('opens what was changed', () => {
+    expect(destinationFor(changed('/products/p1'))).toBe('/products/p1');
+    expect(destinationFor(changed('/kyc'))).toBe('/kyc');
+  });
+
+  it('never leaves the app, whatever the server sent', () => {
+    expect(destinationFor(changed('https://evil.example'))).toBe('/store');
+    expect(destinationFor(changed('//evil.example'))).toBe('/store');
+    expect(destinationFor(changed(undefined))).toBe('/store');
+  });
+});

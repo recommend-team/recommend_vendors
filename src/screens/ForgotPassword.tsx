@@ -118,7 +118,10 @@ export function ForgotPassword() {
  * is going to copy a signed token out of a URL by hand.
  */
 export function ResetPassword() {
-  const token = new URLSearchParams(window.location.search).get('token') ?? '';
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') ?? '';
+  // An admin set up this shop and invited the vendor to choose their first password.
+  const invite = params.get('invite') === '1';
 
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -169,9 +172,13 @@ export function ResetPassword() {
   if (done) {
     return (
       <div className="flex min-h-full flex-col justify-center bg-canvas px-6 text-center">
-        <h1 className="text-2xl font-extrabold text-ink">Password changed</h1>
+        <h1 className="text-2xl font-extrabold text-ink">
+          {invite ? 'Password set' : 'Password changed'}
+        </h1>
         <p className="mt-2 text-[14px] text-ink-soft">
-          Sign in with your new password.
+          {invite
+            ? 'Sign in to see your shop, your orders and your earnings.'
+            : 'Sign in with your new password.'}
         </p>
         <Link
           to="/login"
@@ -185,9 +192,15 @@ export function ResetPassword() {
 
   return (
     <div className="flex min-h-full flex-col bg-canvas px-6 pt-14 pb-8">
-      <h1 className="text-3xl font-extrabold text-ink">New password</h1>
+      <h1 className="text-3xl font-extrabold text-ink">
+        {invite ? 'Set your password' : 'New password'}
+      </h1>
       <p className="mt-2 text-[14px] text-ink-soft">
-        Choose something you&apos;ll remember.
+        {invite ? (
+          'Recommend has set up your shop. Choose a password to sign in.'
+        ) : (
+          <>Choose something you&apos;ll remember.</>
+        )}
       </p>
 
       <form onSubmit={submit} className="mt-8 space-y-5">

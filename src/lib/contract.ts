@@ -242,7 +242,9 @@ export type NotificationType =
   | 'KYC_REJECTED'
   | 'WALLET_CREDITED'
   | 'WITHDRAWAL_SETTLED'
-  | 'WITHDRAWAL_FAILED';
+  | 'WITHDRAWAL_FAILED'
+  /** Recommend changed the store, products or documents for the vendor. */
+  | 'STORE_UPDATED_BY_ADMIN';
 
 /**
  * One thing that happened.

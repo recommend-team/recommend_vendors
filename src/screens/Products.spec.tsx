@@ -22,6 +22,13 @@ vi.mock('../hooks/useSession', () => ({
   useSession: () => useSession(),
 }));
 
+const useSuspended = vi.fn(() => false);
+vi.mock('../hooks/useSuspended', () => ({
+  useSuspended: () => useSuspended(),
+  SUSPENDED_EXPLAINER:
+    'Your account is suspended, so changes and withdrawals are paused. Call Recommend to sort it out.',
+}));
+
 function setup({
   status = 'APPROVED' as SellerStatus,
   total = 0,

@@ -5,6 +5,7 @@ import { formatNaira } from '../lib/format';
 import { PRODUCT_LIMIT } from '../lib/services/products.service';
 import { useProducts, useToggleAvailability } from '../hooks/useProducts';
 import { useSession } from '../hooks/useSession';
+import { useSuspended, SUSPENDED_EXPLAINER } from '../hooks/useSuspended';
 import type { Product } from '../lib/contract';
 
 type Filter = 'all' | 'inStock' | 'outOfStock' | 'addOns';
@@ -34,7 +35,8 @@ export function Products() {
   const [filter, setFilter] = useState<Filter>('all');
   const [blocked, setBlocked] = useState<string | null>(null);
 
-  const approved = user?.status === 'APPROVED';
+  const suspended = useSuspended();
+  const approved = user?.status === 'APPROVED' && !suspended;
   const atLimit = total >= PRODUCT_LIMIT;
   const canAdd = approved && !atLimit;
 
@@ -198,9 +200,11 @@ export function Products() {
             ? undefined
             : () =>
                 setBlocked(
-                  atLimit
-                    ? `You've listed the maximum of ${PRODUCT_LIMIT} products. Remove one to add another.`
-                    : 'You can add products once an admin approves your account. Uploading your documents is the fastest way there.',
+                  suspended
+                    ? SUSPENDED_EXPLAINER
+                    : atLimit
+                      ? `You've listed the maximum of ${PRODUCT_LIMIT} products. Remove one to add another.`
+                      : 'You can add products once an admin approves your account. Uploading your documents is the fastest way there.',
                 )
         }
       />

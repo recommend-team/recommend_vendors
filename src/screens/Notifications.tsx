@@ -134,6 +134,7 @@ const TONE: Record<NotificationType, string> = {
   WALLET_CREDITED: 'bg-brand',
   WITHDRAWAL_SETTLED: 'bg-brand',
   WITHDRAWAL_FAILED: 'bg-accent',
+  STORE_UPDATED_BY_ADMIN: 'bg-amber',
 };
 
 function Row({ notification }: { notification: VendorNotification }) {

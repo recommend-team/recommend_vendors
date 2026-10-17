@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useWallet, useWalletEntries, useWithdrawals } from '../hooks/useWallet';
 import { formatNaira } from '../lib/format';
+import { useSuspended } from '../hooks/useSuspended';
 import type { WalletEntry, Withdrawal } from '../lib/contract';
 
 /**
@@ -16,6 +17,7 @@ import type { WalletEntry, Withdrawal } from '../lib/contract';
  */
 export function Wallet() {
   const wallet = useWallet();
+  const suspended = useSuspended();
   const entries = useWalletEntries();
   const withdrawals = useWithdrawals();
 
@@ -57,11 +59,15 @@ export function Wallet() {
           </p>
         )}
 
-        <Link to="/withdraw" className="block">
-          <Button disabled={balance <= 0}>
-            {balance > 0 ? 'Withdraw' : 'Nothing to withdraw yet'}
-          </Button>
-        </Link>
+        {suspended ? (
+          <Button disabled>Withdrawals paused while suspended</Button>
+        ) : (
+          <Link to="/withdraw" className="block">
+            <Button disabled={balance <= 0}>
+              {balance > 0 ? 'Withdraw' : 'Nothing to withdraw yet'}
+            </Button>
+          </Link>
+        )}
 
         {inFlight.length > 0 && (
           <section className="rounded-2xl bg-amber/30 p-4">

@@ -118,6 +118,16 @@ export function destinationFor(
     case 'KYC_APPROVED':
     case 'KYC_REJECTED':
       return '/kyc';
+    case 'STORE_UPDATED_BY_ADMIN': {
+      // The server says where: the store, a product, the documents. Only ever an
+      // in-app path.
+      const url = notification.data?.url;
+      return typeof url === 'string' &&
+        url.startsWith('/') &&
+        !url.startsWith('//')
+        ? url
+        : '/store';
+    }
     default:
       return null;
   }
