@@ -23,6 +23,8 @@ import { OrderDetail } from './screens/OrderDetail';
 import { Kyc } from './screens/Kyc';
 import { Products } from './screens/Products';
 import { ProductForm } from './screens/ProductForm';
+import { Extras } from './screens/Extras';
+import { ExtraForm } from './screens/ExtraForm';
 import { Dashboard } from './screens/Dashboard';
 import { StoreDetails } from './screens/StoreDetails';
 import { ServiceAreas } from './screens/ServiceAreas';
@@ -65,6 +67,9 @@ export function App() {
               <Route path="/products" element={<Products />} />
               <Route path="/products/new" element={<ProductForm />} />
               <Route path="/products/:id" element={<ProductForm />} />
+              <Route path="/extras" element={<Extras />} />
+              <Route path="/extras/new" element={<ExtraForm />} />
+              <Route path="/extras/:id" element={<ExtraForm />} />
               <Route path="/kyc" element={<Kyc />} />
             </Route>
 
