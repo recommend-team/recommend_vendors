@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Fab } from '../components/ui/Fab';
+import { ProductsTabs } from '../components/products/ProductsTabs';
+import { AddButton } from '../components/products/AddButton';
 import { formatNaira } from '../lib/format';
 import { PRODUCT_LIMIT } from '../lib/services/products.service';
 import { useProducts, useToggleAvailability } from '../hooks/useProducts';
@@ -8,10 +9,11 @@ import { useSession } from '../hooks/useSession';
 import { useSuspended, SUSPENDED_EXPLAINER } from '../hooks/useSuspended';
 import type { Product } from '../lib/contract';
 
-type Filter = 'all' | 'inStock' | 'outOfStock' | 'addOns';
+type Filter = 'all' | 'inStock' | 'outOfStock';
 
 /**
- * The catalogue.
+ * The catalogue: what buyers order. Extras (Beef, Takeaway pack) have their own tab and
+ * their own form, so this list and its add button are only ever for products.
  *
  * Search and filters are here because a vendor with twenty products scrolling on a phone
  * needs them, and twenty is the ceiling the backend enforces — so both stay client-side.
@@ -33,17 +35,22 @@ export function Products() {
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const [blocked, setBlocked] = useState<string | null>(null);
 
   const suspended = useSuspended();
   const approved = user?.status === 'APPROVED' && !suspended;
   const atLimit = total >= PRODUCT_LIMIT;
-  const canAdd = approved && !atLimit;
+  const blockedBecause = suspended
+    ? SUSPENDED_EXPLAINER
+    : atLimit
+      ? `You've listed the maximum of ${PRODUCT_LIMIT} products and extras. Remove one to add another.`
+      : !approved
+        ? 'You can add products once an admin approves your account. Uploading your documents is the fastest way there.'
+        : null;
 
-  const visible = products.filter((product) => {
+  const main = products.filter((product) => !product.isAddOn);
+  const visible = main.filter((product) => {
     if (filter === 'inStock' && !product.isAvailable) return false;
     if (filter === 'outOfStock' && product.isAvailable) return false;
-    if (filter === 'addOns' && !product.isAddOn) return false;
     if (!search) return true;
 
     const needle = search.toLowerCase();
@@ -54,24 +61,25 @@ export function Products() {
   });
 
   return (
-    <div className="flex min-h-full flex-col bg-canvas pb-28">
-      <header className="px-4 pt-5 pb-4">
-        <h1 className="text-[26px] leading-tight font-extrabold text-ink">
-          Product Inventory
-        </h1>
-        <p className="mt-1 text-[13px] text-ink-soft">
-          Manage your listings and what buyers can see.{' '}
-          <span className="font-bold text-accent">
-            {total} of {PRODUCT_LIMIT}
-          </span>{' '}
-          used.
-        </p>
-      </header>
+    <div className="flex min-h-full flex-col bg-canvas pb-10">
+      <ProductsTabs products={products} />
 
       <div className="px-4">
-        <div className="relative">
+        <AddButton
+          label="Add product"
+          to="/products/new"
+          blockedBecause={blockedBecause}
+        />
+
+        <div className="relative mt-4">
           <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-faint">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
               <circle
                 cx="11"
                 cy="11"
@@ -112,12 +120,6 @@ export function Products() {
           >
             Out of Stock
           </Chip>
-          <Chip
-            active={filter === 'addOns'}
-            onClick={() => setFilter('addOns')}
-          >
-            Add-ons
-          </Chip>
         </div>
       </div>
 
@@ -144,7 +146,7 @@ export function Products() {
 
         {!isLoading && !isError && visible.length === 0 && (
           <p className="py-10 text-center text-[13px] leading-relaxed text-ink-soft">
-            {products.length === 0
+            {main.length === 0
               ? 'Nothing listed yet. Add your first product and buyers can start finding you.'
               : 'Nothing matches that.'}
           </p>
@@ -172,42 +174,7 @@ export function Products() {
             Couldn&apos;t update that. Nothing has changed — try again.
           </p>
         )}
-
-        {/**
-         * Why the button is always drawn.
-         *
-         * It used to be hidden unless the vendor was approved and under the limit, on the
-         * grounds that `POST /products` would refuse them anyway. That reasoning was
-         * wrong: a vendor who cannot find the button does not conclude "I must not be
-         * approved yet", they conclude the app is broken. It is shown, and tapping it
-         * when it cannot work says why instead of navigating into a form that will fail.
-         */}
-        {blocked && (
-          <p
-            role="status"
-            className="rounded-2xl bg-amber px-4 py-3 text-[13px] leading-snug text-ink"
-          >
-            {blocked}
-          </p>
-        )}
       </div>
-
-      <Fab
-        label="Add a product"
-        to={canAdd ? '/products/new' : undefined}
-        onClick={
-          canAdd
-            ? undefined
-            : () =>
-                setBlocked(
-                  suspended
-                    ? SUSPENDED_EXPLAINER
-                    : atLimit
-                      ? `You've listed the maximum of ${PRODUCT_LIMIT} products. Remove one to add another.`
-                      : 'You can add products once an admin approves your account. Uploading your documents is the fastest way there.',
-                )
-        }
-      />
     </div>
   );
 }
@@ -223,7 +190,10 @@ function ProductRow({
 }) {
   return (
     <article className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-sm">
-      <Link to={`/products/${product.id}`} className="flex min-w-0 flex-1 gap-3">
+      <Link
+        to={`/products/${product.id}`}
+        className="flex min-w-0 flex-1 gap-3"
+      >
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
@@ -233,7 +203,13 @@ function ProductRow({
           />
         ) : (
           <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-amber text-ink-faint">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
               <rect
                 x="3"
                 y="5"
@@ -256,15 +232,21 @@ function ProductRow({
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-extrabold text-ink">
             <span className="truncate">{product.name}</span>
-            {product.isAddOn && (
-              <span className="shrink-0 rounded-full bg-mint px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-brand uppercase">
-                Add-on
-              </span>
-            )}
           </p>
           <p className="mt-0.5 text-[15px] font-extrabold text-accent">
             {formatNaira(product.price)}
+            {product.unit && (
+              <span className="text-[12px] font-bold text-ink-soft">
+                {' '}
+                / {product.unit}
+              </span>
+            )}
           </p>
+          {comesWith(product) && (
+            <p className="mt-0.5 truncate text-[12px] text-ink-soft">
+              {comesWith(product)}
+            </p>
+          )}
           <p
             className={[
               'mt-1 flex items-center gap-1.5 text-[11px] font-extrabold tracking-wider uppercase',
@@ -308,6 +290,17 @@ function ProductRow({
       </button>
     </article>
   );
+}
+
+/** "2 extras · Choose your protein" — what buyers get to add or pick. */
+function comesWith(product: Product): string {
+  const extras = product.extraIds?.length ?? 0;
+  return [
+    extras > 0 ? `${extras} extra${extras === 1 ? '' : 's'}` : null,
+    ...(product.choices ?? []).map((choice) => choice.name),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 function Chip({

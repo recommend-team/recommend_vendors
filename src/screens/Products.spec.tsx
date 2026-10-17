@@ -68,7 +68,7 @@ describe('Products', () => {
   it('always offers a way to add a product', () => {
     setup();
 
-    expect(screen.getByRole('link', { name: /add a product/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /add product/i })).toHaveAttribute(
       'href',
       '/products/new',
     );
@@ -77,22 +77,26 @@ describe('Products', () => {
   it('still shows the button to an unapproved vendor, and says why it cannot be used', async () => {
     setup({ status: 'PENDING' });
 
-    const add = screen.getByRole('button', { name: /add a product/i });
+    const add = screen.getByRole('button', { name: /add product/i });
     // Not a link: tapping must not walk them into a form the server will refuse.
-    expect(screen.queryByRole('link', { name: /add a product/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /add product/i })).toBeNull();
 
     await userEvent.click(add);
-    expect(screen.getByRole('status')).toHaveTextContent(/approves your account/i);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /approves your account/i,
+    );
   });
 
   it('explains the ceiling rather than hiding the button at the limit', async () => {
     setup({ total: 20 });
 
-    await userEvent.click(screen.getByRole('button', { name: /add a product/i }));
-    expect(screen.getByRole('status')).toHaveTextContent(/maximum of 20 products/i);
+    await userEvent.click(screen.getByRole('button', { name: /add product/i }));
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /maximum of 20 products and extras/i,
+    );
   });
 
-  describe('add-ons', () => {
+  describe('products and extras, apart', () => {
     const product = (over: Partial<Product>): Partial<Product> => ({
       vendorId: 'v1',
       description: null,
@@ -104,22 +108,52 @@ describe('Products', () => {
     });
     const menu = [
       product({ id: 'p1', name: 'Jollof Rice', price: '3500.00' }),
-      product({ id: 'p2', name: 'Bottled water', price: '300.00', isAddOn: true }),
+      product({
+        id: 'p2',
+        name: 'Bottled water',
+        price: '300.00',
+        isAddOn: true,
+      }),
     ];
 
-    it('badges the extras in the list', () => {
+    it('lists only products — extras have their own tab', () => {
       setup({ products: menu, total: 2 });
 
-      expect(screen.getAllByText('Add-on')).toHaveLength(1);
+      expect(screen.getByText('Jollof Rice')).toBeInTheDocument();
+      expect(screen.queryByText('Bottled water')).toBeNull();
+      expect(screen.getByRole('link', { name: /Extras\s*1/ })).toHaveAttribute(
+        'href',
+        '/extras',
+      );
     });
 
-    it('filters down to just the extras', async () => {
-      setup({ products: menu, total: 2 });
+    it('says what each product comes with', () => {
+      setup({
+        products: [
+          product({
+            id: 'p1',
+            name: 'Rice and stew',
+            unit: 'portion',
+            extraIds: ['p2'],
+            choices: [
+              {
+                id: 'g',
+                name: 'Choose your protein',
+                required: true,
+                minPick: 1,
+                maxPick: 1,
+                options: [],
+              },
+            ],
+          }),
+        ],
+        total: 1,
+      });
 
-      await userEvent.click(screen.getByRole('button', { name: 'Add-ons' }));
-
-      expect(screen.getByText('Bottled water')).toBeInTheDocument();
-      expect(screen.queryByText('Jollof Rice')).toBeNull();
+      expect(
+        screen.getByText('1 extra · Choose your protein'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('/ portion')).toBeInTheDocument();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
 /**
@@ -71,6 +71,11 @@ const TABS: { to: string; label: string; icon: ReactNode }[] = [
 // in the drawer, and the approval banner points at it while it still matters.
 
 export function BottomNav() {
+  const { pathname } = useLocation();
+  // Extras live under the Products tab, beside the products list.
+  const lit = (to: string, isActive: boolean) =>
+    isActive || (to === '/products' && pathname.startsWith('/extras'));
+
   return (
     <nav
       className="flex items-stretch justify-around border-t border-hairline bg-surface"
@@ -83,28 +88,31 @@ export function BottomNav() {
           to={tab.to}
           className="flex flex-1 flex-col items-center gap-1 px-1 pt-2 pb-1.5"
         >
-          {({ isActive }) => (
-            <>
-              <span
-                className={[
-                  'grid h-9 w-9 place-items-center rounded-2xl transition',
-                  isActive ? 'bg-accent text-white' : 'text-ink-faint',
-                ].join(' ')}
-              >
-                <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden>
-                  {tab.icon}
-                </svg>
-              </span>
-              <span
-                className={[
-                  'text-[9px] font-extrabold tracking-wider uppercase',
-                  isActive ? 'text-ink' : 'text-ink-faint',
-                ].join(' ')}
-              >
-                {tab.label}
-              </span>
-            </>
-          )}
+          {({ isActive: matched }) => {
+            const isActive = lit(tab.to, matched);
+            return (
+              <>
+                <span
+                  className={[
+                    'grid h-9 w-9 place-items-center rounded-2xl transition',
+                    isActive ? 'bg-accent text-white' : 'text-ink-faint',
+                  ].join(' ')}
+                >
+                  <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden>
+                    {tab.icon}
+                  </svg>
+                </span>
+                <span
+                  className={[
+                    'text-[9px] font-extrabold tracking-wider uppercase',
+                    isActive ? 'text-ink' : 'text-ink-faint',
+                  ].join(' ')}
+                >
+                  {tab.label}
+                </span>
+              </>
+            );
+          }}
         </NavLink>
       ))}
     </nav>
