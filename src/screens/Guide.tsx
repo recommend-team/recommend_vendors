@@ -98,16 +98,17 @@ export function Guide() {
           </p>
         </Section>
 
-        <Section title="Add-ons">
+        <Section title="Extras">
           <p>
-            An add-on is something sold only alongside a main item, such as
-            drinks, extra protein or a side. Turn on <strong>Add-on</strong>{' '}
-            when creating the product.
+            An extra is something buyers add to a product they order — Beef, a
+            Takeaway pack, Water. Go to <strong>Products</strong>, open the{' '}
+            <strong>Extras</strong> tab and tap <strong>+ Add extra</strong>,
+            then tick the products it goes with.
           </p>
           <p>
-            Add-ons don&apos;t appear in search. Buyers are offered them at
-            checkout, next to a meal from your kitchen. They are charged the
-            same {PLATFORM_FEE_PERCENT}% fee as any other item.
+            Extras are never sold on their own and don&apos;t appear in search.
+            They are charged the same {PLATFORM_FEE_PERCENT}% fee as any other
+            item.
           </p>
         </Section>
 

@@ -1,8 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 import { ImageUpload } from '../components/ui/ImageUpload';
+import { ExtrasPicker } from '../components/products/ExtrasPicker';
+import {
+  ChoicesEditor,
+  choiceProblem,
+  toChoiceInputs,
+  toDrafts,
+  type DraftChoice,
+} from '../components/products/ChoicesEditor';
+import { PRODUCT_UNITS, type ProductUnit } from '../lib/contract';
 import {
   useCreateProduct,
   useDeleteProduct,
@@ -15,7 +24,8 @@ import { PLATFORM_FEE_PERCENT, vendorShare } from '../lib/fees';
 import { formatNaira } from '../lib/format';
 
 /**
- * Adding or editing one product.
+ * Adding or editing one product — what buyers order. Extras (Beef, Takeaway pack) have
+ * their own form (`ExtraForm`), so this one never changes into the other.
  *
  * **Fewer fields than the reference design**, because the model has fewer columns. There
  * is no category, no stock level and no second image — a `Product` is a name, a price,
@@ -36,6 +46,7 @@ export function ProductForm() {
 
   const { products } = useProducts();
   const existing = products.find((product) => product.id === id);
+  const vendorExtras = products.filter((p) => p.isAddOn && p.id !== id);
 
   const create = useCreateProduct();
   const update = useUpdateProduct();
@@ -46,7 +57,12 @@ export function ProductForm() {
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
-  const [addOn, setAddOn] = useState(false);
+  const [unit, setUnit] = useState<ProductUnit | ''>('');
+  const [extraIds, setExtraIds] = useState<string[]>([]);
+  const [choices, setChoices] = useState<DraftChoice[]>([]);
+  const [choiceProblems, setChoiceProblems] = useState<
+    Record<string, string | null>
+  >({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -59,8 +75,15 @@ export function ProductForm() {
     setDescription(existing.description ?? '');
     setImageUrl(existing.imageUrl);
     setAvailable(existing.isAvailable);
-    setAddOn(existing.isAddOn ?? false);
+    setUnit(existing.unit ?? '');
+    setExtraIds(existing.extraIds ?? []);
+    setChoices(toDrafts(existing.choices));
   }, [existing]);
+
+  // An extra opened by an old link belongs on the extra form.
+  if (existing?.isAddOn) {
+    return <Navigate to={`/extras/${existing.id}`} replace />;
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -78,7 +101,15 @@ export function ProductForm() {
             : null,
     };
 
-    if (Object.values(problems).some(Boolean)) {
+    const choiceIssues = Object.fromEntries(
+      choices.map((c) => [c.key, choiceProblem(c)]),
+    );
+    setChoiceProblems(choiceIssues);
+
+    if (
+      Object.values(problems).some(Boolean) ||
+      Object.values(choiceIssues).some(Boolean)
+    ) {
       setErrors(problems);
       return;
     }
@@ -89,7 +120,10 @@ export function ProductForm() {
       description: description.trim() || undefined,
       imageUrl: imageUrl ?? undefined,
       isAvailable: available,
-      isAddOn: addOn,
+      isAddOn: false,
+      unit: unit || null,
+      extraIds,
+      choices: toChoiceInputs(choices),
     };
 
     try {
@@ -204,6 +238,26 @@ export function ProductForm() {
           error={errors.price}
           hint={<span className="text-[13px] text-ink-faint">₦</span>}
         />
+        {/* What the price is for — "₦1,000 per portion". A restaurant sells portions;
+            a gadget shop can leave it empty. */}
+        <div className="-mt-2 flex items-center gap-2 px-1">
+          <label htmlFor="unit" className="text-[13px] font-bold text-ink-soft">
+            Price is per
+          </label>
+          <select
+            id="unit"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as ProductUnit | '')}
+            className="min-h-10 rounded-xl border border-hairline bg-surface px-3 text-[14px] text-ink"
+          >
+            <option value="">— (no unit)</option>
+            {PRODUCT_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </div>
         {/* The fee, at the moment of pricing — learning it from the wallet afterwards is
             the surprise this line exists to prevent. */}
         {Number(price) > 0 && (
@@ -238,6 +292,17 @@ export function ProductForm() {
           />
         </div>
 
+        <ExtrasPicker
+          extras={vendorExtras}
+          selected={extraIds}
+          onChange={setExtraIds}
+        />
+        <ChoicesEditor
+          choices={choices}
+          onChange={setChoices}
+          problems={choiceProblems}
+        />
+
         <div className="flex items-center gap-3 rounded-2xl bg-surface p-4">
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-bold text-ink">In stock</p>
@@ -261,39 +326,6 @@ export function ProductForm() {
               className={[
                 'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
                 available ? 'left-6' : 'left-1',
-              ].join(' ')}
-            />
-          </button>
-        </div>
-
-        {/**
-         * An add-on is never found in search and never sold alone — buyers are offered it
-         * at checkout, beside a meal from this kitchen. Worded by what it is for, with an
-         * example, because "add-on" alone means different things to different vendors.
-         */}
-        <div className="flex items-center gap-3 rounded-2xl bg-surface p-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-bold text-ink">Add-on</p>
-            <p className="text-[12px] leading-snug text-ink-soft">
-              Sold only with a main item, e.g. drinks or extra protein. Buyers
-              are offered it at checkout instead of finding it in search.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAddOn((current) => !current)}
-            role="switch"
-            aria-checked={addOn}
-            aria-label="Add-on"
-            className={[
-              'relative h-7 w-12 shrink-0 rounded-full transition',
-              addOn ? 'bg-brand' : 'bg-hairline',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
-                addOn ? 'left-6' : 'left-1',
               ].join(' ')}
             />
           </button>
