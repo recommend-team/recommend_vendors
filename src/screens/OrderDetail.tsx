@@ -3,7 +3,7 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { useMarkReady, useOrders } from '../hooks/useOrders';
 import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
 import { CollectionCheck } from '../components/orders/CollectionCheck';
-import { AddOnTag } from '../components/orders/AddOnTag';
+import { OrderLines } from '../components/orders/OrderLines';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -81,25 +81,9 @@ export function OrderDetail() {
           <h2 className="text-[11px] font-extrabold tracking-widest text-ink-faint uppercase">
             Items
           </h2>
-          <ul className="mt-2 space-y-1.5">
-            {order.items.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-baseline gap-2 text-[14px]"
-              >
-                <span className="shrink-0 font-extrabold text-ink-faint">
-                  {item.quantity}×
-                </span>
-                <span className="min-w-0 flex-1 text-ink">
-                  {item.productName}
-                  {item.isAddOn && <AddOnTag />}
-                </span>
-                <span className="shrink-0 text-ink-soft">
-                  {formatNaira(item.lineTotal)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-2">
+            <OrderLines order={order} />
+          </div>
         </section>
 
         <section className="rounded-2xl bg-surface p-4 shadow-sm">

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { StatusPill } from '../ui/StatusPill';
 import { formatNaira, formatOrderTime, orderLabel } from '../../lib/format';
 import type { VendorOrder } from '../../lib/contract';
-import { AddOnTag } from './AddOnTag';
+import { OrderLines } from './OrderLines';
 
 /**
  * One order, as the reference draws it: a coloured spine, the reference, the customer,
@@ -53,33 +53,10 @@ export function OrderCard({
         <StatusPill status={order.status} />
       </div>
 
-      <ul className="mt-3 space-y-1.5 px-4">
-        {order.items.map((item) => (
-          <li key={item.id} className="flex items-center gap-2 text-[14px]">
-            <span className="shrink-0 text-brand" aria-hidden>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M20 4c0 8-5 12-11 12H5c0-8 5-12 11-12h4zM5 20c0-4 3-7 7-8"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="shrink-0 font-extrabold text-ink">
-              {item.quantity}×
-            </span>
-            <span className="min-w-0 flex-1 truncate text-ink">
-              {item.productName}
-              {item.isAddOn && <AddOnTag />}
-            </span>
-          </li>
-        ))}
-        {order.items.length === 0 && (
-          <li className="text-[14px] text-ink-faint">No items recorded</li>
-        )}
-      </ul>
+      {/* Each dish as the buyer built it — portions, choices, extras, packs. */}
+      <div className="mt-3 px-4">
+        <OrderLines order={order} compact />
+      </div>
 
       {order.status === 'READY' && <ReadyStrip order={order} />}
 
