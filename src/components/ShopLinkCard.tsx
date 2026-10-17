@@ -29,42 +29,36 @@ export function ShopLinkCard({ url }: { url: string }) {
   };
 
   return (
-    <section className="rounded-2xl bg-surface p-4 shadow-sm">
-      <p className="text-[15px] font-extrabold text-ink">Your shop link</p>
-      <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">
-        Share it on Instagram, WhatsApp or TikTok — buyers can order and pay
-        right there.
-      </p>
-
-      <a
-        href={url}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-3 block truncate rounded-xl bg-canvas px-3 py-2.5 text-[13px] font-bold text-brand"
-      >
-        {shown}
+    <section className="flex items-center gap-2 rounded-2xl bg-surface py-2.5 pr-2.5 pl-4 shadow-sm">
+      <a href={url} target="_blank" rel="noreferrer" className="min-w-0 flex-1">
+        <span className="block text-[11px] font-extrabold tracking-widest text-ink-soft uppercase">
+          Your shop link
+        </span>
+        <span className="block truncate text-[13px] font-bold text-brand">
+          {shown}
+        </span>
       </a>
 
-      <div className="mt-3 flex gap-2">
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? 'Link copied' : 'Copy link'}
+        title={copied ? 'Link copied' : 'Copy link'}
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-white active:scale-95"
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
+      {canShare && (
         <button
           type="button"
-          onClick={copy}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-accent px-4 text-[14px] font-bold text-white active:scale-[0.99]"
+          onClick={share}
+          aria-label="Share shop link"
+          title="Share"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-mint text-brand active:scale-95"
         >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-          {copied ? 'Link copied' : 'Copy link'}
+          <ShareIcon />
         </button>
-        {canShare && (
-          <button
-            type="button"
-            onClick={share}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-mint px-4 text-[14px] font-bold text-brand active:scale-[0.99]"
-          >
-            <ShareIcon />
-            Share
-          </button>
-        )}
-      </div>
+      )}
       <span className="sr-only" aria-live="polite">
         {copied ? 'Shop link copied' : ''}
       </span>

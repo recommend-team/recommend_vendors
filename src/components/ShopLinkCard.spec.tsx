@@ -12,7 +12,7 @@ describe('ShopLinkCard', () => {
     render(<ShopLinkCard url={URL} />);
 
     const link = screen.getByRole('link', {
-      name: 'recommend.ng/store/mama-put',
+      name: 'Your shop link recommend.ng/store/mama-put',
     });
     expect(link).toHaveAttribute('href', URL);
   });
