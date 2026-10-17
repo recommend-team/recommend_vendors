@@ -57,22 +57,83 @@ describe('PayoutAccounts', () => {
     verifyAccount.mockResolvedValue(account());
   });
 
+  /** Search for a bank and tap it, as a vendor would. */
+  async function chooseBank(typed: string, name: string) {
+    await userEvent.type(screen.getByRole('combobox', { name: 'Bank' }), typed);
+    await userEvent.click(screen.getByRole('option', { name }));
+  }
+
+  it('finds a bank by part of its name, or by its initials', async () => {
+    setup();
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
+    const search = screen.getByRole('combobox', { name: 'Bank' });
+
+    await userEvent.type(search, 'kud');
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Kuda',
+    ]);
+
+    await userEvent.clear(search);
+    await userEvent.type(search, 'GTB');
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Guaranty Trust Bank',
+    ]);
+  });
+
+  it('says so when nothing matches', async () => {
+    setup();
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
+
+    await userEvent.type(
+      screen.getByRole('combobox', { name: 'Bank' }),
+      'zenithx',
+    );
+
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(screen.getByText(/no bank matches/i)).toBeInTheDocument();
+  });
+
+  it('chooses with the keyboard, and can change its mind', async () => {
+    setup();
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
+
+    await userEvent.type(
+      screen.getByRole('combobox', { name: 'Bank' }),
+      'kuda{Enter}',
+    );
+    expect(screen.getByText('Kuda')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Change' }));
+    expect(screen.getByRole('combobox', { name: 'Bank' })).toBeInTheDocument();
+  });
+
   it('offers banks from the backend rather than a hard-coded list', async () => {
     setup();
 
-    await userEvent.click(screen.getByRole('button', { name: /add an account/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
 
     expect(screen.getByRole('option', { name: 'Kuda' })).toBeInTheDocument();
   });
 
   it('will not submit until there is a bank and ten digits', async () => {
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /add an account/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
 
     const submit = screen.getByRole('button', { name: /^add account$/i });
     expect(submit).toBeDisabled();
 
-    await userEvent.selectOptions(screen.getByLabelText(/bank/i), '058');
+    await chooseBank('gtb', 'Guaranty Trust Bank');
     await userEvent.type(screen.getByLabelText(/account number/i), '012345');
     expect(submit).toBeDisabled();
 
@@ -82,12 +143,19 @@ describe('PayoutAccounts', () => {
 
   it('sends the password with the account', async () => {
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /add an account/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
 
-    await userEvent.selectOptions(screen.getByLabelText(/bank/i), '058');
-    await userEvent.type(screen.getByLabelText(/account number/i), '0123456789');
+    await chooseBank('gtb', 'Guaranty Trust Bank');
+    await userEvent.type(
+      screen.getByLabelText(/account number/i),
+      '0123456789',
+    );
     await userEvent.type(screen.getByLabelText(/your password/i), 'hunter2');
-    await userEvent.click(screen.getByRole('button', { name: /^add account$/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /^add account$/i }),
+    );
 
     expect(addAccount).toHaveBeenCalledWith({
       bankCode: '058',
@@ -103,11 +171,18 @@ describe('PayoutAccounts', () => {
       new ApiError(400, 'We could not find that account at that bank.'),
     );
     setup();
-    await userEvent.click(screen.getByRole('button', { name: /add an account/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /add an account/i }),
+    );
 
-    await userEvent.selectOptions(screen.getByLabelText(/bank/i), '058');
-    await userEvent.type(screen.getByLabelText(/account number/i), '9999999999');
-    await userEvent.click(screen.getByRole('button', { name: /^add account$/i }));
+    await chooseBank('gtb', 'Guaranty Trust Bank');
+    await userEvent.type(
+      screen.getByLabelText(/account number/i),
+      '9999999999',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /^add account$/i }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /could not find that account/i,

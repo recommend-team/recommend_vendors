@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
+import { BankPicker } from '../components/ui/BankPicker';
 import {
   useAddPayoutAccount,
   useBanks,
@@ -200,7 +201,10 @@ function VerifyForm({ account }: { account: PayoutAccount }) {
   };
 
   return (
-    <form onSubmit={submit} className="mt-3 space-y-2 rounded-2xl bg-canvas p-3">
+    <form
+      onSubmit={submit}
+      className="mt-3 space-y-2 rounded-2xl bg-canvas p-3"
+    >
       <p className="text-[13px] leading-snug text-ink-soft">
         We emailed you a six-digit code. Enter it to start using this account.
       </p>
@@ -223,7 +227,11 @@ function VerifyForm({ account }: { account: PayoutAccount }) {
       )}
       {sent && <p className="text-[13px] text-brand">New code sent.</p>}
 
-      <Button type="submit" loading={verify.isPending} disabled={code.length < 6}>
+      <Button
+        type="submit"
+        loading={verify.isPending}
+        disabled={code.length < 6}
+      >
         Confirm account
       </Button>
       <Button
@@ -273,29 +281,12 @@ function AddAccountForm({ onDone }: { onDone: () => void }) {
       onSubmit={submit}
       className="space-y-3 rounded-2xl bg-surface p-4 shadow-sm"
     >
-      <div>
-        <label
-          htmlFor="bank"
-          className="mb-1.5 block text-[13px] font-bold text-ink-soft"
-        >
-          Bank
-        </label>
-        <select
-          id="bank"
-          value={bankCode}
-          onChange={(event) => setBankCode(event.target.value)}
-          className="min-h-12 w-full rounded-full border border-hairline bg-surface px-4 text-ink outline-none"
-        >
-          <option value="">
-            {banksLoading ? 'Loading banks…' : 'Choose your bank'}
-          </option>
-          {(banks ?? []).map((bank) => (
-            <option key={bank.code} value={bank.code}>
-              {bank.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BankPicker
+        banks={banks ?? []}
+        loading={banksLoading}
+        value={bankCode}
+        onChange={setBankCode}
+      />
 
       <Field
         label="Account number"
