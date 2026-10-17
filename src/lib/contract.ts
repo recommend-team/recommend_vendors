@@ -98,6 +98,11 @@ export interface VendorOrder {
     isAddOn?: boolean;
   }[];
   /**
+   * The order as the buyer built it: each dish with its portions, packs, choices and
+   * extras. Absent on older servers — `items` then is all there is.
+   */
+  lines?: OrderLine[];
+  /**
    * The payment this order was part of; may cover other vendors too. Narrowed by the
    * server to what a vendor may see — never the basket's totals, which would show other
    * sellers' shares.
@@ -108,6 +113,30 @@ export interface VendorOrder {
     /** Who is coming to collect a delivery, once admin has assigned them. */
     rider: { name: string; phone: string | null } | null;
   } | null;
+}
+
+/** One dish as bought — "2 × Rice and beans (2 portions, Protein: Beef, with Beef ×2)". */
+export interface OrderLine {
+  productName: string;
+  /** The one-line form: name with portions, choices and extras. */
+  name: string;
+  /** Packs for a dish built as a pack; the count for anything else. */
+  quantity: number;
+  /** Per pack. */
+  portions: number;
+  packs: number;
+  unit: string | null;
+  lineTotal: number;
+  unitPrice: number;
+  isAddOn: boolean;
+  choices: { group: string; option: string; priceDelta: number }[];
+  /** Per pack. */
+  extras: {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -150,8 +179,51 @@ export interface Product {
    * than add-ons, which reads as false.
    */
   isAddOn?: boolean;
+  /** What the price is for — "per portion". Null shows no unit. Absent on older servers. */
+  unit?: ProductUnit | null;
+  /** On a dish: the vendor's extras ticked onto it. */
+  extraIds?: string[];
+  /** On an extra: the products it is ticked on. */
+  dishIds?: string[];
+  /** On a dish: its choices — "Choose your protein". */
+  choices?: ChoiceGroup[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** The units a price can be for — `PRODUCT_UNITS` on the backend. */
+export const PRODUCT_UNITS = [
+  'portion',
+  'plate',
+  'piece',
+  'pack',
+  'wrap',
+  'bottle',
+  'bowl',
+  'cup',
+] as const;
+export type ProductUnit = (typeof PRODUCT_UNITS)[number];
+
+/**
+ * A question on a dish. The buyer picks between `minPick` and `maxPick` options; a
+ * required choice must be answered before the dish can be added. One answer covers the
+ * whole pack.
+ */
+export interface ChoiceGroup {
+  id: string;
+  name: string;
+  required: boolean;
+  minPick: number;
+  maxPick: number;
+  options: ChoiceOption[];
+}
+
+export interface ChoiceOption {
+  id: string;
+  name: string;
+  /** Added per portion. 0 for "included". */
+  priceDelta: number;
+  isAvailable: boolean;
 }
 
 // ─── Profile, coverage and money ──────────────────────────────────────────────

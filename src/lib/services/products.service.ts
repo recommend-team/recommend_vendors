@@ -1,5 +1,5 @@
 import { request } from '../api';
-import type { Paginated, Product } from '../contract';
+import type { Paginated, Product, ProductUnit } from '../contract';
 
 /**
  * A vendor's catalogue.
@@ -30,6 +30,31 @@ export interface ProductInput {
   imageUrl?: string;
   isAvailable?: boolean;
   isAddOn?: boolean;
+  /** Dishes only. */
+  unit?: ProductUnit | null;
+  /** Dishes only: the extras ticked on it. Replaces the current list. */
+  extraIds?: string[];
+  /** Extras only: the products it goes with. Replaces the current list. */
+  dishIds?: string[];
+  /**
+   * Dishes only: the whole list of choices, replacing the current one. Keep `id` on
+   * groups and options that already exist, so buyers' carts holding them keep working.
+   */
+  choices?: ChoiceGroupInput[];
+}
+
+export interface ChoiceGroupInput {
+  id?: string;
+  name: string;
+  required: boolean;
+  minPick: number;
+  maxPick: number;
+  options: {
+    id?: string;
+    name: string;
+    priceDelta: number;
+    isAvailable: boolean;
+  }[];
 }
 
 /**
