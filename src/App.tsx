@@ -27,6 +27,7 @@ import { Extras } from './screens/Extras';
 import { ExtraForm } from './screens/ExtraForm';
 import { Dashboard } from './screens/Dashboard';
 import { StoreDetails } from './screens/StoreDetails';
+import { Settings } from './screens/Settings';
 import { ServiceAreas } from './screens/ServiceAreas';
 import { PayoutAccounts } from './screens/PayoutAccounts';
 import { Wallet } from './screens/Wallet';
@@ -58,6 +59,7 @@ export function App() {
               <Route path="/orders/:id" element={<OrderDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/store" element={<StoreDetails />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/areas" element={<ServiceAreas />} />
               <Route path="/payout-accounts" element={<PayoutAccounts />} />
               <Route path="/wallet" element={<Wallet />} />

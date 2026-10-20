@@ -239,6 +239,28 @@ export interface Area {
   stateId: string;
 }
 
+export type WeekDay =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
+
+/**
+ * One day of opening hours, "HH:mm" in Lagos time. A closing time earlier than the
+ * opening time closes the next day; the same time means open all day.
+ */
+export interface DaySchedule {
+  isOpen: boolean;
+  open: string;
+  close: string;
+}
+
+/** All seven days — the backend refuses a week with any missing. */
+export type OperatingHours = Record<WeekDay, DaySchedule>;
+
 /**
  * Everything `GET /sellers/profile` returns.
  *
@@ -266,8 +288,22 @@ export interface VendorProfile {
   businessLogoUrl: string | null;
   businessBannerUrl: string | null;
   whatsappNumber: string | null;
-  /** The shop shutter. False hides every product from buyers at once. */
+  /**
+   * The pause switch. Off: no orders, whatever the opening hours say. On: orders within
+   * the opening hours, or at any time if none are set.
+   */
   isOpen: boolean;
+  /** The weekly schedule in Lagos time, or null for none (open whenever switched on). */
+  operatingHours: OperatingHours | null;
+  /**
+   * Whether buyers can order right now — the switch and the hours together, decided by
+   * the server. Optional only because an older server does not send it.
+   */
+  openNow?: boolean;
+  /** When the shop next opens (ISO) — null if open, paused, or no day open. */
+  opensAt?: string | null;
+  /** When the current opening ends (ISO) — null if closed or it never ends. */
+  closesAt?: string | null;
 
   // KYC — which of these are set tells the vendor what is still outstanding.
   cacDocumentUrl: string | null;

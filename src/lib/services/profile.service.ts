@@ -1,5 +1,11 @@
 import { request } from '../api';
-import type { Earnings, State, Area, VendorProfile } from '../contract';
+import type {
+  Earnings,
+  State,
+  Area,
+  OperatingHours,
+  VendorProfile,
+} from '../contract';
 
 export function fetchVendorProfile(): Promise<VendorProfile> {
   return request<VendorProfile>('/sellers/profile');
@@ -22,6 +28,8 @@ export interface ProfileChanges {
   businessBannerUrl?: string;
   whatsappNumber?: string;
   isOpen?: boolean;
+  /** The whole week — the backend refuses part of one. Null clears the schedule. */
+  operatingHours?: OperatingHours | null;
 }
 
 /** At least one field, or the backend refuses it. */

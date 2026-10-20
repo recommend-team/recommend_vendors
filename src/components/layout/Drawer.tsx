@@ -31,6 +31,7 @@ const LINKS: { to: string; label: string; hint: string }[] = [
     label: 'How Recommend works',
     hint: 'Products, orders, fees',
   },
+  { to: '/settings', label: 'Settings', hint: 'Opening hours' },
 ];
 
 export function Drawer({
