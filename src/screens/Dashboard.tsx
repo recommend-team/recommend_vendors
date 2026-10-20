@@ -10,7 +10,8 @@ import {
 } from '../hooks/useProfile';
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';
-import type { Earnings, VendorOrder } from '../lib/contract';
+import type { Earnings, VendorOrder, VendorProfile } from '../lib/contract';
+import { closesPhrase, opensPhrase, sentence, shopState } from '../lib/opening';
 import type { ReactNode } from 'react';
 
 /**
@@ -34,6 +35,10 @@ export function Dashboard() {
   const suspended = useSuspended();
 
   const open = profile?.isOpen ?? false;
+  const state = profile ? shopState(profile) : 'paused';
+  const shutter = profile
+    ? shutterText(profile)
+    : { title: 'Paused', line: PAUSED_LINE };
   const trend = monthOnMonth(earnings);
 
   return (
@@ -69,43 +74,50 @@ export function Dashboard() {
       </header>
 
       <div className="space-y-3 px-4">
-        {/* The shutter. One tap, near the top, because closing early is a decision made
-            in a hurry and buried settings are how a vendor takes orders they cannot fill. */}
-        <div className="flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-sm">
-          <span
-            className={[
-              'h-3 w-3 shrink-0 rounded-full',
-              open ? 'bg-brand' : 'bg-ink-faint',
-            ].join(' ')}
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-extrabold text-ink">
-              {open ? 'Open for orders' : 'Closed'}
-            </p>
-            <p className="text-[12px] leading-snug text-ink-soft">
-              {open
-                ? 'Buyers can see and order your products.'
-                : 'Your products are hidden until you open again.'}
-            </p>
-          </div>
-          <button
-            onClick={() => update.mutate({ isOpen: !open })}
-            disabled={isLoading || update.isPending || suspended}
-            role="switch"
-            aria-checked={open}
-            aria-label={open ? 'Close the shop' : 'Open the shop'}
-            className={[
-              'relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50',
-              open ? 'bg-brand' : 'bg-hairline',
-            ].join(' ')}
-          >
+        {/* The pause. One tap, near the top, because closing early is a decision made
+            in a hurry and buried settings are how a vendor takes orders they cannot fill.
+            Open is the switch *and* the opening hours, so what it says comes from both. */}
+        <div className="rounded-2xl bg-surface p-4 shadow-sm">
+          <div className="flex items-center gap-3">
             <span
               className={[
-                'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
-                open ? 'left-6' : 'left-1',
+                'h-3 w-3 shrink-0 rounded-full',
+                state === 'open' ? 'bg-brand' : 'bg-ink-faint',
               ].join(' ')}
             />
-          </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-extrabold text-ink">
+                {shutter.title}
+              </p>
+              <p className="text-[12px] leading-snug text-ink-soft">
+                {shutter.line}
+              </p>
+            </div>
+            <button
+              onClick={() => update.mutate({ isOpen: !open })}
+              disabled={isLoading || update.isPending || suspended}
+              role="switch"
+              aria-checked={open}
+              aria-label={open ? 'Pause orders' : 'Resume orders'}
+              className={[
+                'relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50',
+                open ? 'bg-brand' : 'bg-hairline',
+              ].join(' ')}
+            >
+              <span
+                className={[
+                  'absolute top-1 h-5 w-5 rounded-full bg-white transition-all',
+                  open ? 'left-6' : 'left-1',
+                ].join(' ')}
+              />
+            </button>
+          </div>
+          <Link
+            to="/settings"
+            className="mt-3 inline-block text-[13px] font-bold text-brand"
+          >
+            Opening hours ›
+          </Link>
         </div>
 
         {/* A full link only — an older server sent a bare path, useless to share. */}
@@ -378,4 +390,30 @@ function Stat({
       <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">{label}</p>
     </div>
   );
+}
+
+const PAUSED_LINE = 'No orders until you switch this back on.';
+
+/** What the pause card says: the switch and the opening hours, as the server judged them. */
+function shutterText(
+  profile: Pick<VendorProfile, 'isOpen' | 'openNow' | 'opensAt' | 'closesAt'>,
+): { title: string; line: string } {
+  switch (shopState(profile)) {
+    case 'paused':
+      return { title: 'Paused', line: PAUSED_LINE };
+    case 'open':
+      return {
+        title: 'Open for orders',
+        line: profile.closesAt
+          ? sentence(closesPhrase(profile.closesAt))
+          : 'Buyers can order now.',
+      };
+    case 'closed':
+      return {
+        title: 'Closed now',
+        line: profile.opensAt
+          ? `${sentence(opensPhrase(profile.opensAt))} · from your opening hours`
+          : 'Outside your opening hours.',
+      };
+  }
 }
