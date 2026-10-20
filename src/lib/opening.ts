@@ -112,3 +112,28 @@ export function opensPhrase(opensAt: string, now = new Date()): string {
 export function sentence(phrase: string): string {
   return phrase[0].toUpperCase() + phrase.slice(1);
 }
+
+/** Every half hour of the day, "HH:mm" — what the time lists offer. */
+const HALF_HOURS = Array.from({ length: 48 }, (_, i) => {
+  const hours = String(Math.floor(i / 2)).padStart(2, '0');
+  return `${hours}:${i % 2 ? '30' : '00'}`;
+});
+
+/**
+ * The times a list offers: every half hour, plus `current` if it falls between them
+ * (hours saved elsewhere, such as by the team), so a saved time is never lost.
+ */
+export function timeChoices(current: string): string[] {
+  return HALF_HOURS.includes(current)
+    ? HALF_HOURS
+    : [...HALF_HOURS, current].sort();
+}
+
+/** "09:00" → "9:00 AM", "12:00" → "12:00 PM (noon)", "00:00" → "12:00 AM (midnight)". */
+export function twelveHour(time: string): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  const clock = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'AM' : 'PM'}`;
+  if (time === '00:00') return `${clock} (midnight)`;
+  if (time === '12:00') return `${clock} (noon)`;
+  return clock;
+}

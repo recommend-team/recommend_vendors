@@ -5,6 +5,8 @@ import {
   lagosWhen,
   opensPhrase,
   shopState,
+  timeChoices,
+  twelveHour,
 } from './opening';
 
 /** A moment written as Lagos wall-clock time. 2026-10-19 is a Monday. */
@@ -74,5 +76,34 @@ describe('shopState', () => {
 
   it('trusts the switch alone from a server that does not send openNow', () => {
     expect(shopState({ isOpen: true })).toBe('open');
+  });
+});
+
+describe('twelveHour', () => {
+  it.each([
+    ['09:00', '9:00 AM'],
+    ['13:30', '1:30 PM'],
+    ['19:00', '7:00 PM'],
+    ['12:00', '12:00 PM (noon)'],
+    ['00:00', '12:00 AM (midnight)'],
+    ['00:30', '12:30 AM'],
+    ['08:10', '8:10 AM'],
+  ])('reads %s as "%s"', (time, said) => {
+    expect(twelveHour(time)).toBe(said);
+  });
+});
+
+describe('timeChoices', () => {
+  it('offers every half hour of the day', () => {
+    const choices = timeChoices('09:00');
+    expect(choices).toHaveLength(48);
+    expect(choices.slice(0, 3)).toEqual(['00:00', '00:30', '01:00']);
+    expect(choices.at(-1)).toBe('23:30');
+  });
+
+  it('keeps a saved time that falls between half hours, in its place', () => {
+    const choices = timeChoices('08:10');
+    expect(choices).toHaveLength(49);
+    expect(choices.slice(16, 19)).toEqual(['08:00', '08:10', '08:30']);
   });
 });

@@ -143,3 +143,20 @@ describe('OpeningHours', () => {
     expect(screen.getByRole('status')).toHaveTextContent(said);
   });
 });
+
+describe('OpeningHours — on a phone', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('offers times in 12-hour form', () => {
+    setup({ operatingHours: WEEK });
+
+    const opens = screen.getByLabelText('Monday opens');
+    expect(opens).toHaveDisplayValue('9:00 AM');
+    expect(screen.getByLabelText('Monday closes')).toHaveDisplayValue(
+      '7:00 PM',
+    );
+    expect(
+      Array.from((opens as HTMLSelectElement).options, (o) => o.text),
+    ).toContain('12:00 PM (noon)');
+  });
+});
