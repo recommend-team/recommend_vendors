@@ -83,6 +83,11 @@ export interface VendorOrder {
   fulfillmentType: FulfillmentType;
   status: OrderStatus;
   deliveryAddress: string | null;
+  /** Where the buyer picked the address on the map. Null when typed; absent on older servers. */
+  deliveryPlaceId?: string | null;
+  /** Decimal strings, as Postgres sends them. */
+  deliveryLat?: string | null;
+  deliveryLng?: string | null;
   notes: string | null;
   paidAt: string | null;
   createdAt: string;

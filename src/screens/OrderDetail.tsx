@@ -4,6 +4,7 @@ import { useMarkReady, useOrders } from '../hooks/useOrders';
 import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
 import { CollectionCheck } from '../components/orders/CollectionCheck';
 import { OrderLines } from '../components/orders/OrderLines';
+import type { VendorOrder } from '../lib/contract';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -106,6 +107,16 @@ export function OrderDetail() {
               ? (order.deliveryAddress ?? 'Delivery address not given')
               : 'Customer is collecting'}
           </p>
+          {order.fulfillmentType === 'DELIVERY' && mapLink(order) && (
+            <a
+              href={mapLink(order) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-[13px] font-bold text-accent"
+            >
+              Open in Maps
+            </a>
+          )}
           {order.notes && (
             <p className="mt-2 rounded-xl bg-amber px-3 py-2 text-[13px] leading-snug text-ink">
               {order.notes}
@@ -220,4 +231,17 @@ function Row({
       </span>
     </div>
   );
+}
+
+/** The address the buyer picked, in Google Maps — null when it was typed. */
+function mapLink(order: VendorOrder): string | null {
+  if (!order.deliveryPlaceId || !order.deliveryLat || !order.deliveryLng) {
+    return null;
+  }
+  const query = new URLSearchParams({
+    api: '1',
+    query: `${order.deliveryLat},${order.deliveryLng}`,
+    query_place_id: order.deliveryPlaceId,
+  });
+  return `https://www.google.com/maps/search/?${query.toString()}`;
 }
