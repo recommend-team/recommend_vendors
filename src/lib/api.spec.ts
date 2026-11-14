@@ -91,6 +91,30 @@ describe('request', () => {
     expect(getAccessToken()).toBeNull();
   });
 
+  it('does not refresh on a wrong password — that would send it, and count it, twice', async () => {
+    storeSession({ accessToken: 'access-1', refreshToken: 'r1', user });
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: false,
+          code: 'PASSWORD_INCORRECT',
+          message: 'That password is not correct.',
+        }),
+        { status: 401 },
+      ),
+    );
+
+    await expect(
+      request('/sellers/wallet/withdrawals', { method: 'POST', body: '{}' }),
+    ).rejects.toMatchObject({
+      status: 401,
+      message: 'That password is not correct.',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // Still signed in: a mistyped password is not a lost session.
+    expect(getAccessToken()).toBe('access-1');
+  });
+
   it('does not retry a 403 — a wrong role is not fixed by a fresh token', async () => {
     storeSession({ accessToken: 'access-1', refreshToken: 'r1', user });
     fetchMock.mockResolvedValue(failure(403, 'Forbidden'));

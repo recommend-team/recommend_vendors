@@ -102,7 +102,13 @@ export async function request<T>(
 
   // One retry, and only on a 401 — a 403 means the role is wrong, which refreshing
   // cannot fix, and retrying it would just be slower.
-  if (response.status === 401 && !options.anonymous) {
+  // A 401 about the password the vendor just typed is not an expired session:
+  // refreshing would only send the same wrong password again, and count it twice.
+  if (
+    response.status === 401 &&
+    !options.anonymous &&
+    !(await isPasswordCheck(response))
+  ) {
     if (await refreshAccessToken()) {
       response = await send(path, options);
     } else {
@@ -122,4 +128,13 @@ export async function request<T>(
   }
 
   return body?.data as T;
+}
+
+/** A 401 that means "confirm your password" or "that password is wrong". */
+async function isPasswordCheck(response: Response): Promise<boolean> {
+  const body = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { code?: unknown } | null;
+  return typeof body?.code === 'string' && body.code.startsWith('PASSWORD_');
 }
