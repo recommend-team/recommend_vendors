@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import {
   UploadError,
-  uploadFile,
-  type UploadedFile,
+  uploadKycDocument,
+  type UploadedDocument,
 } from '../../lib/services/storage.service';
 
 /**
@@ -13,6 +13,9 @@ import {
  * one screen, with one failure losing the lot. This way each is done and visibly done,
  * and a retry costs one file.
  *
+ * Identity documents go up privately: `onUploaded` gets a reference to submit, not a
+ * link, and nobody outside our team can open the file.
+ *
  * `capture` is not set on the input: it would force the camera and make it impossible to
  * choose a PDF or an existing photo, which is exactly what someone with a scanned CAC
  * certificate needs.
@@ -20,20 +23,21 @@ import {
 export function DocumentUpload({
   label,
   hint,
-  folder = 'kyc',
   value,
+  submitted = false,
   onUploaded,
 }: {
   label: string;
   hint: string;
-  folder?: 'kyc' | 'products' | 'profile';
   value?: string;
-  onUploaded: (url: string) => void;
+  /** Already on the account — shown as done, and not uploaded again. */
+  submitted?: boolean;
+  onUploaded: (ref: string) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploaded, setUploaded] = useState<UploadedFile | null>(null);
+  const [uploaded, setUploaded] = useState<UploadedDocument | null>(null);
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
@@ -41,9 +45,9 @@ export function DocumentUpload({
     setError(null);
     setBusy(true);
     try {
-      const result = await uploadFile(file, folder);
+      const result = await uploadKycDocument(file);
       setUploaded(result);
-      onUploaded(result.secureUrl);
+      onUploaded(result.ref);
     } catch (cause) {
       setError(
         cause instanceof UploadError
@@ -58,7 +62,7 @@ export function DocumentUpload({
     }
   };
 
-  const done = !!value;
+  const done = submitted || !!value;
 
   return (
     <div className="rounded-2xl bg-surface p-4">
@@ -66,7 +70,11 @@ export function DocumentUpload({
         <div className="min-w-0">
           <p className="text-[14px] font-extrabold text-ink">{label}</p>
           <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">
-            {done ? (uploaded?.format ?? 'Uploaded').toUpperCase() : hint}
+            {submitted
+              ? 'Submitted — we’re reviewing it'
+              : done
+                ? (uploaded?.format ?? 'Uploaded').toUpperCase()
+                : hint}
           </p>
         </div>
         {done && <Tick />}
@@ -83,13 +91,19 @@ export function DocumentUpload({
       <button
         type="button"
         onClick={() => input.current?.click()}
-        disabled={busy}
+        disabled={busy || submitted}
         className={[
           'mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full px-4 text-[14px] font-bold transition active:scale-[0.99] disabled:opacity-50',
           done ? 'bg-mint text-brand' : 'bg-accent text-white',
         ].join(' ')}
       >
-        {busy ? 'Uploading…' : done ? 'Replace' : 'Upload or take a photo'}
+        {submitted
+          ? 'Submitted'
+          : busy
+            ? 'Uploading…'
+            : done
+              ? 'Replace'
+              : 'Upload or take a photo'}
       </button>
 
       {error && (

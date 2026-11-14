@@ -25,10 +25,36 @@ const JPEG_QUALITY = 0.82;
 
 export class UploadError extends Error {}
 
+/** An identity document as stored: a private reference to submit, never a link. */
+export interface UploadedDocument {
+  ref: string;
+  format: string;
+  bytes: number;
+}
+
 export async function uploadFile(
   file: File,
-  folder: 'kyc' | 'products' | 'profile' | 'general' = 'general',
+  folder: 'products' | 'profile' | 'general' = 'general',
 ): Promise<UploadedFile> {
+  const body = await prepare(file);
+  return request<UploadedFile>(
+    `/storage/upload?folder=${encodeURIComponent(folder)}`,
+    { method: 'POST', body },
+  );
+}
+
+/**
+ * An identity document (NIN slip, CAC certificate…), uploaded privately. Nothing about it
+ * is public: what comes back is a reference to submit with the KYC form, and only our
+ * team can open the file, briefly, from the admin panel.
+ */
+export async function uploadKycDocument(file: File): Promise<UploadedDocument> {
+  const body = await prepare(file);
+  return request<UploadedDocument>('/storage/kyc', { method: 'POST', body });
+}
+
+/** Checked, shrunk if it is a photo, and wrapped for upload. */
+async function prepare(file: File): Promise<FormData> {
   if (!ACCEPTED.includes(file.type)) {
     throw new UploadError(
       'That file type is not supported. Use a photo (JPG or PNG) or a PDF.',
@@ -49,11 +75,7 @@ export async function uploadFile(
 
   const body = new FormData();
   body.append('file', prepared, prepared.name);
-
-  return request<UploadedFile>(
-    `/storage/upload?folder=${encodeURIComponent(folder)}`,
-    { method: 'POST', body },
-  );
+  return body;
 }
 
 export async function shrinkImage(file: File): Promise<File> {

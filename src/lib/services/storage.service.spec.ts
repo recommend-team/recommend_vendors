@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { UploadError, uploadFile } from './storage.service';
+import { UploadError, uploadFile, uploadKycDocument } from './storage.service';
 import { storeSession } from '../auth';
 import type { AuthUser } from '../contract';
 
@@ -26,24 +26,24 @@ describe('uploadFile', () => {
   });
 
   it('refuses a file type the backend would reject anyway', async () => {
-    await expect(uploadFile(file('video/mp4'), 'kyc')).rejects.toBeInstanceOf(
-      UploadError,
-    );
+    await expect(
+      uploadFile(file('video/mp4'), 'products'),
+    ).rejects.toBeInstanceOf(UploadError);
     // Refused before the round trip — no point spending a vendor's data on a 400.
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('accepts a PDF, which is how scanned certificates arrive', async () => {
     await expect(
-      uploadFile(file('application/pdf'), 'kyc'),
+      uploadFile(file('application/pdf'), 'products'),
     ).resolves.toMatchObject({ secureUrl: 'https://x/y.jpg' });
   });
 
   it('sends multipart, and lets the browser set the boundary', async () => {
-    await uploadFile(file('image/jpeg'), 'kyc');
+    await uploadFile(file('image/jpeg'), 'products');
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(String(url)).toContain('/storage/upload?folder=kyc');
+    expect(String(url)).toContain('/storage/upload?folder=products');
     expect(init.body).toBeInstanceOf(FormData);
     // Setting Content-Type here would strip the boundary and break every upload.
     expect(init.headers['Content-Type']).toBeUndefined();
@@ -62,7 +62,38 @@ describe('uploadFile', () => {
     // The whole point of the fallbacks: a slow upload beats a KYC submission that
     // cannot be completed at all.
     await expect(
-      uploadFile(file('image/jpeg', 2000), 'kyc'),
+      uploadFile(file('image/jpeg', 2000), 'products'),
     ).resolves.toBeTruthy();
+  });
+});
+
+describe('uploadKycDocument', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    storeSession({ accessToken: 'a', refreshToken: 'r', user });
+    fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        ok({ ref: 'kyc:image/recommend/kyc/v1/a', format: 'pdf' }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('createImageBitmap', undefined);
+  });
+
+  it('goes up privately, and hands back a reference — never a link', async () => {
+    const uploaded = await uploadKycDocument(file('application/pdf'));
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/storage/kyc');
+    expect(String(url)).not.toContain('/storage/upload');
+    expect(uploaded.ref).toBe('kyc:image/recommend/kyc/v1/a');
+  });
+
+  it('refuses a file type the backend would reject anyway', async () => {
+    await expect(uploadKycDocument(file('video/mp4'))).rejects.toBeInstanceOf(
+      UploadError,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

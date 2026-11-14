@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '../components/ui/Button';
 import { DocumentUpload } from '../components/ui/DocumentUpload';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useSession } from '../hooks/useSession';
+import { useVendorProfile } from '../hooks/useProfile';
+import { SUPPORT_PHONE, SUPPORT_PHONE_HREF } from '../lib/support';
 import { ApiError } from '../lib/api';
 import {
   KYC_DOCUMENTS,
@@ -14,13 +17,21 @@ import {
 export function Kyc() {
   const navigate = useNavigate();
   const { user } = useSession();
+  const queryClient = useQueryClient();
+  // What is already on the account: shown as submitted, not asked for again.
+  const profile = useVendorProfile();
 
   const [documents, setDocuments] = useState<KycSubmission>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const required = KYC_DOCUMENTS[user?.vendorType ?? 'NON_REGISTERED'];
+  const vendorType =
+    profile.data?.vendorType ?? user?.vendorType ?? 'NON_REGISTERED';
+  const required = KYC_DOCUMENTS[vendorType];
+  const isSubmitted = (key: string) =>
+    !!profile.data?.[key as keyof typeof profile.data];
+  const outstanding = required.filter((document) => !isSubmitted(document.key));
   const uploaded = Object.keys(documents).length;
 
   const submit = async () => {
@@ -28,6 +39,8 @@ export function Kyc() {
     setBusy(true);
     try {
       await submitKyc(documents);
+      // So coming back here shows these as submitted.
+      await queryClient.invalidateQueries({ queryKey: ['vendor', 'profile'] });
       setDone(true);
     } catch (cause) {
       setError(
@@ -82,24 +95,46 @@ export function Kyc() {
 
       <div className="px-4 pb-2">
         <p className="text-[14px] leading-relaxed text-ink-soft">
-          {user?.vendorType === 'REGISTERED'
-            ? 'Upload your registration documents so we can verify your business.'
-            : 'Upload what you have. One is enough to start — you can add the rest later.'}
+          {profile.data && outstanding.length === 0
+            ? 'All your documents are in. We’ll review them and let you know by email.'
+            : vendorType === 'REGISTERED'
+              ? 'Upload your registration documents so we can verify your business.'
+              : 'Upload what you have. One is enough to start — you can add the rest later.'}
         </p>
       </div>
 
       <div className="space-y-3 px-4 py-4">
-        {required.map((document) => (
-          <DocumentUpload
-            key={document.key}
-            label={document.label}
-            hint={document.hint}
-            value={documents[document.key]}
-            onUploaded={(url) =>
-              setDocuments((current) => ({ ...current, [document.key]: url }))
-            }
-          />
-        ))}
+        {profile.isLoading ? (
+          <p className="py-6 text-center text-[13px] text-ink-soft">
+            Loading your documents…
+          </p>
+        ) : (
+          required.map((document) => (
+            <DocumentUpload
+              key={document.key}
+              label={document.label}
+              hint={document.hint}
+              value={documents[document.key]}
+              submitted={isSubmitted(document.key)}
+              onUploaded={(ref) =>
+                setDocuments((current) => ({
+                  ...current,
+                  [document.key]: ref,
+                }))
+              }
+            />
+          ))
+        )}
+
+        {required.some((document) => isSubmitted(document.key)) && (
+          <p className="text-[12px] leading-snug text-ink-soft">
+            Need to change a document you&apos;ve submitted? Call us on{' '}
+            <a href={SUPPORT_PHONE_HREF} className="font-bold text-accent">
+              {SUPPORT_PHONE}
+            </a>
+            .
+          </p>
+        )}
 
         {error && (
           <p
@@ -120,9 +155,11 @@ export function Kyc() {
           loading={busy}
           disabled={uploaded === 0}
         >
-          {uploaded === 0
-            ? 'Upload at least one document'
-            : `Submit ${uploaded} document${uploaded === 1 ? '' : 's'}`}
+          {uploaded > 0
+            ? `Submit ${uploaded} document${uploaded === 1 ? '' : 's'}`
+            : profile.data && outstanding.length === 0
+              ? 'All documents submitted'
+              : 'Upload at least one document'}
         </Button>
       </div>
     </div>
