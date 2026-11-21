@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { InstallPrompt } from '../components/AlertsPrompt';
+import { CategoryPicker } from '../components/CategoryPicker';
 import { ChoiceCard } from '../components/ui/ChoiceCard';
 import { Field, PasswordField } from '../components/ui/Field';
 import { Stepper } from '../components/ui/Stepper';
@@ -17,17 +18,6 @@ import {
 import type { VendorType } from '../lib/contract';
 
 const TOTAL_STEPS = 5;
-
-const CATEGORIES = [
-  'Restaurant',
-  'Gadgets',
-  'Phone Accessories',
-  'Home Appliances',
-  'Groceries',
-  'Fashion',
-  'Beauty',
-  'Other',
-];
 
 /**
  * The marketing site's tier cards link here as `/signup?type=REGISTERED`, so a vendor
@@ -81,7 +71,10 @@ export function SignUp() {
       case 3:
         return {
           businessName: requiredProblem(form.businessName, 'Business name'),
-          businessCategory: form.businessCategory ? null : 'Pick what you sell',
+          businessCategory:
+            form.businessCategory.trim().length >= 2
+              ? null
+              : 'Pick what you sell, or tell us',
         };
       case 4:
         return {
@@ -129,7 +122,7 @@ export function SignUp() {
         vendorType: form.vendorType as VendorType,
         businessName: form.businessName.trim(),
         businessAddress: form.businessAddress.trim(),
-        businessCategory: form.businessCategory,
+        businessCategory: form.businessCategory.trim(),
         businessDescription: form.businessDescription.trim() || undefined,
       });
 
@@ -251,33 +244,11 @@ export function SignUp() {
               error={errors.businessName}
             />
 
-            <div>
-              <p className="mb-1.5 text-[13px] font-bold text-ink-soft">
-                What do you sell?
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => set('businessCategory')(category)}
-                    className={[
-                      'min-h-11 rounded-full px-4 text-[14px] font-bold transition',
-                      form.businessCategory === category
-                        ? 'bg-accent text-white'
-                        : 'bg-surface text-ink-soft',
-                    ].join(' ')}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-              {errors.businessCategory && (
-                <p className="mt-1.5 text-[13px] text-accent">
-                  {errors.businessCategory}
-                </p>
-              )}
-            </div>
+            <CategoryPicker
+              value={form.businessCategory}
+              onChange={set('businessCategory')}
+              error={errors.businessCategory}
+            />
           </Step>
         )}
 

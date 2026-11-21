@@ -73,8 +73,7 @@ export type FulfillmentType = 'PICKUP' | 'DELIVERY';
 export interface VendorOrder {
   id: string;
   buyerName: string;
-  buyerPhone: string;
-  buyerEmail: string | null;
+  // No phone or email: buyers and vendors reach each other only through Recommend.
   /** This vendor's goods subtotal. Delivery belongs to the checkout, not here. */
   totalAmount: string;
   platformFee: string;
@@ -288,6 +287,11 @@ export interface VendorProfile {
   businessAddress: string | null;
   businessDescription: string | null;
   businessCategory: string | null;
+  /**
+   * What Recommend keeps of each of their sales, and why. Null when the server could
+   * not work it out — fall back to the standard rate rather than guess.
+   */
+  commission?: Commission | null;
   /** Resolved rows, not ids — sending them back requires `areaIds`. */
   serviceAreas: { id: string; name: string; stateId: string }[];
   businessLogoUrl: string | null;
@@ -357,7 +361,9 @@ export type NotificationType =
   | 'WITHDRAWAL_SETTLED'
   | 'WITHDRAWAL_FAILED'
   /** Recommend changed the store, products or documents for the vendor. */
-  | 'STORE_UPDATED_BY_ADMIN';
+  | 'STORE_UPDATED_BY_ADMIN'
+  /** What Recommend keeps of their sales went up, from their next order. */
+  | 'COMMISSION_RATE_RAISED';
 
 /**
  * One thing that happened.
@@ -455,4 +461,28 @@ export interface WithdrawalQuote {
   amountRequested: number;
   feeAmount: number;
   amountSent: number;
+}
+
+// ─── Categories and fees ──────────────────────────────────────────────────────
+
+/** A category a vendor can choose — `GET /categories`, public. */
+export interface CategoryOption {
+  id: string;
+  name: string;
+  /** What Recommend keeps of each sale in it, in percent. */
+  feePercent: number;
+}
+
+/** Where a vendor's rate comes from. */
+export type CommissionBasis = 'CUSTOM' | 'CATEGORY' | 'STANDARD';
+
+/** What Recommend keeps of a vendor's sales — on `VendorProfile`. */
+export interface Commission {
+  percent: number;
+  basis: CommissionBasis;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryPercent: number | null;
+  customPercent: number | null;
+  standardPercent: number;
 }

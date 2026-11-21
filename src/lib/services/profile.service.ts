@@ -1,4 +1,10 @@
 import { request } from '../api';
+import type { CategoryOption } from '../contract';
+
+/** The categories a vendor can choose. Public: sign-up uses it before there is a session. */
+export async function listCategories(): Promise<CategoryOption[]> {
+  return request<CategoryOption[]>('/categories', { anonymous: true });
+}
 import type {
   Earnings,
   State,

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 import { ImageUpload } from '../components/ui/ImageUpload';
+import { CategoryPicker } from '../components/CategoryPicker';
+import { percentText } from '../lib/fees';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useUpdateProfile, useVendorProfile } from '../hooks/useProfile';
 import { ApiError } from '../lib/api';
@@ -57,6 +59,11 @@ export function StoreDetails() {
     const problems = {
       businessName: requiredProblem(form.businessName, 'Business name'),
       businessAddress: requiredProblem(form.businessAddress, 'Address', 5),
+      businessCategory:
+        form.businessCategory !== (profile?.businessCategory ?? '') &&
+        form.businessCategory.trim().length < 2
+          ? 'Pick what you sell, or tell us'
+          : null,
       whatsappNumber:
         form.whatsappNumber && !toE164(form.whatsappNumber)
           ? 'Enter a valid number, like 0801 234 5678'
@@ -119,13 +126,20 @@ export function StoreDetails() {
           maxLength={100}
         />
 
-        <Field
-          label="What you sell"
-          placeholder="Restaurant"
+        <CategoryPicker
           value={form.businessCategory}
-          onChange={(event) => set('businessCategory')(event.target.value)}
-          maxLength={100}
+          onChange={set('businessCategory')}
+          error={errors.businessCategory}
         />
+        {profile?.commission?.basis === 'CUSTOM' && (
+          <p className="-mt-3 text-[13px] text-ink-soft">
+            You have a rate agreed with Recommend:{' '}
+            <strong className="text-ink">
+              {percentText(profile.commission.percent)}
+            </strong>{' '}
+            of each sale, whatever you sell.
+          </p>
+        )}
 
         <Field
           label="Address"

@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SignUp } from './SignUp';
+
+// The category step asks the server for the list; these tests never reach it.
+vi.mock('../lib/services/profile.service', () => ({
+  listCategories: vi.fn().mockResolvedValue([]),
+}));
 
 /**
  * The marketing site's tier cards deep-link here as `/signup?type=REGISTERED`. That link
@@ -11,9 +17,11 @@ import { SignUp } from './SignUp';
  */
 function renderAt(path: string) {
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <SignUp />
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={[path]}>
+        <SignUp />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
