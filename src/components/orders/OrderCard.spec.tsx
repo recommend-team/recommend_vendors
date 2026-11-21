@@ -11,8 +11,6 @@ const order = (
 ): VendorOrder => ({
   id: 'o1',
   buyerName: 'Chinwe Obi',
-  buyerPhone: '+2348012345678',
-  buyerEmail: null,
   totalAmount: '7900.00',
   platformFee: '1580.00',
   vendorAmount: '6320.00',

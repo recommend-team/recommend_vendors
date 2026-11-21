@@ -5,6 +5,7 @@ import { formatNaira, formatOrderTime, orderLabel } from '../lib/format';
 import { CollectionCheck } from '../components/orders/CollectionCheck';
 import { OrderLines } from '../components/orders/OrderLines';
 import type { VendorOrder } from '../lib/contract';
+import { SUPPORT_PHONE_HREF } from '../lib/support';
 
 /**
  * One order in full — what to make, who it is for, and what the vendor is owed.
@@ -94,14 +95,14 @@ export function OrderDetail() {
           <p className="mt-2 text-[15px] font-bold text-ink">
             {order.buyerName}
           </p>
-          {/* A tap-to-call link, because the alternative is copying a number by hand
-              while holding a pan. */}
-          <a
-            href={`tel:${order.buyerPhone}`}
-            className="mt-0.5 inline-block text-[14px] font-bold text-accent"
-          >
-            {order.buyerPhone}
-          </a>
+          {/* No phone number: buyers and vendors reach each other only through
+              Recommend, which has the buyer's details and the order in front of it. */}
+          <p className="mt-0.5 text-[13px] text-ink-soft">
+            Need to reach them?{' '}
+            <a href={SUPPORT_PHONE_HREF} className="font-bold text-accent">
+              Contact Recommend
+            </a>
+          </p>
           <p className="mt-2 text-[13px] leading-snug text-ink-soft">
             {order.fulfillmentType === 'DELIVERY'
               ? (order.deliveryAddress ?? 'Delivery address not given')
