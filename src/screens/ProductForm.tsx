@@ -20,7 +20,8 @@ import {
 } from '../hooks/useProducts';
 import { ApiError } from '../lib/api';
 import { requiredProblem } from '../lib/validate';
-import { PLATFORM_FEE_PERCENT, vendorShare } from '../lib/fees';
+import { percentText, vendorShare } from '../lib/fees';
+import { useFeePercent } from '../hooks/useProfile';
 import { formatNaira } from '../lib/format';
 
 /**
@@ -51,6 +52,8 @@ export function ProductForm() {
   const create = useCreateProduct();
   const update = useUpdateProduct();
   const remove = useDeleteProduct();
+  // Their own rate — what the server charges them — not a number copied into the app.
+  const feePercent = useFeePercent();
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -264,9 +267,9 @@ export function ProductForm() {
           <p className="-mt-2 px-4 text-[12px] leading-snug text-ink-soft">
             You receive{' '}
             <span className="font-bold text-ink">
-              {formatNaira(vendorShare(Number(price)))}
+              {formatNaira(vendorShare(Number(price), feePercent))}
             </span>{' '}
-            after Recommend&apos;s {PLATFORM_FEE_PERCENT}% fee.{' '}
+            after Recommend&apos;s {percentText(feePercent)} fee.{' '}
             <Link to="/guide" className="font-bold text-accent">
               How fees work
             </Link>

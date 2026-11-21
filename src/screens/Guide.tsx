@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ScreenHeader } from '../components/layout/ScreenHeader';
 import { useSession } from '../hooks/useSession';
-import { PLATFORM_FEE_PERCENT, vendorShare } from '../lib/fees';
+import { percentText, vendorShare } from '../lib/fees';
+import { useCategoryOptions, useVendorProfile } from '../hooks/useProfile';
 import { formatNaira } from '../lib/format';
 
 /** The worked example in the fees section — a round number makes the cut obvious. */
@@ -23,8 +24,6 @@ export function Guide() {
   const { user, loading } = useSession();
   const navigate = useNavigate();
 
-  const fee = EXAMPLE_PRICE - vendorShare(EXAMPLE_PRICE);
-
   return (
     <div className="flex min-h-full flex-col bg-canvas">
       <ScreenHeader
@@ -39,27 +38,9 @@ export function Guide() {
           you get paid once they receive it.
         </p>
 
-        <Section title={`Fees: Recommend keeps ${PLATFORM_FEE_PERCENT}%`} open>
-          <p>
-            For every sale, Recommend keeps {PLATFORM_FEE_PERCENT}% of the price
-            of the items sold, add-ons included. You keep the rest. There is no
-            sign-up fee and no monthly charge.
-          </p>
-          <div className="rounded-2xl bg-canvas p-4 text-[13px]">
-            <Row
-              label="A buyer pays for an item"
-              value={formatNaira(EXAMPLE_PRICE)}
-            />
-            <Row
-              label={`Recommend fee (${PLATFORM_FEE_PERCENT}%)`}
-              value={`−${formatNaira(fee)}`}
-            />
-            <Row
-              label="You receive"
-              value={formatNaira(vendorShare(EXAMPLE_PRICE))}
-              strong
-            />
-          </div>
+        <Section title="Fees: what Recommend keeps" open>
+          {/* Signed in: their own rate. Deciding whether to sign up: each category's. */}
+          {user && !loading ? <YourFee /> : <FeesByCategory />}
           <p>
             Delivery is never part of the fee. Set your prices with the fee in
             mind: the price form shows what you will receive as you type.
@@ -107,8 +88,7 @@ export function Guide() {
           </p>
           <p>
             Extras are never sold on their own and don&apos;t appear in search.
-            They are charged the same {PLATFORM_FEE_PERCENT}% fee as any other
-            item.
+            They are charged the same fee as any other item.
           </p>
         </Section>
 
@@ -156,6 +136,77 @@ export function Guide() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * A signed-in vendor's own rate, worked through on an example — the rate the server
+ * charges them: one agreed with them, their category's, or the standard one.
+ */
+function YourFee() {
+  const { data: profile } = useVendorProfile();
+  const commission = profile?.commission;
+  if (!commission) {
+    return (
+      <p>
+        Recommend keeps a share of the price of every item sold, add-ons included.
+        You keep the rest. There is no sign-up fee and no monthly charge.
+      </p>
+    );
+  }
+  const percent = commission.percent;
+  const share = vendorShare(EXAMPLE_PRICE, percent);
+  const why =
+    commission.basis === 'CUSTOM'
+      ? 'This is a rate agreed with you.'
+      : commission.basis === 'CATEGORY'
+        ? `This is the rate for ${commission.categoryName}.`
+        : 'This is the standard rate. It may change once your store is in a category.';
+  return (
+    <>
+      <p>
+        For every sale, Recommend keeps <strong>{percentText(percent)}</strong> of
+        the price of the items sold, add-ons included. You keep the rest. {why} There
+        is no sign-up fee and no monthly charge.
+      </p>
+      <div className="rounded-2xl bg-canvas p-4 text-[13px]">
+        <Row label="A buyer pays for an item" value={formatNaira(EXAMPLE_PRICE)} />
+        <Row
+          label={`Recommend fee (${percentText(percent)})`}
+          value={`−${formatNaira(EXAMPLE_PRICE - share)}`}
+        />
+        <Row label="You receive" value={formatNaira(share)} strong />
+      </div>
+      <p>
+        If your rate ever goes up, you are told before your next order — in the app
+        and by email. Orders already placed never change.
+      </p>
+    </>
+  );
+}
+
+/** Before signing up: what Recommend keeps depends on what you sell. */
+function FeesByCategory() {
+  const { data: categories } = useCategoryOptions();
+  return (
+    <>
+      <p>
+        Recommend keeps a share of the price of every item sold, add-ons included,
+        and you keep the rest. The share depends on what you sell. There is no
+        sign-up fee and no monthly charge.
+      </p>
+      {categories && categories.length > 0 && (
+        <div className="rounded-2xl bg-canvas p-4 text-[13px]">
+          {categories.map((category) => (
+            <Row
+              key={category.id}
+              label={category.name}
+              value={percentText(category.feePercent)}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 

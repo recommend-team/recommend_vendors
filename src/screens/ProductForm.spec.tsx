@@ -16,6 +16,8 @@ vi.mock('../hooks/useProducts', () => ({
   useDeleteProduct: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock('../components/ui/ImageUpload', () => ({ ImageUpload: () => null }));
+// The vendor's own rate, as their profile would give it.
+vi.mock('../hooks/useProfile', () => ({ useFeePercent: () => 25 }));
 
 const product = (over: Partial<Product>): Product => ({
   id: 'p',

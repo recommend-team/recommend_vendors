@@ -3,11 +3,19 @@ import {
   fetchEarnings,
   fetchVendorProfile,
   listAreas,
+  listCategories,
   listStates,
   updateVendorProfile,
   type ProfileChanges,
 } from '../lib/services/profile.service';
-import type { Area, Earnings, State, VendorProfile } from '../lib/contract';
+import type {
+  Area,
+  CategoryOption,
+  Earnings,
+  State,
+  VendorProfile,
+} from '../lib/contract';
+import { STANDARD_FEE_PERCENT } from '../lib/fees';
 
 const PROFILE_KEY = ['vendor', 'profile'];
 
@@ -62,4 +70,19 @@ export function useAreas(stateId: string | null) {
     enabled: !!stateId,
     staleTime: 60 * 60_000,
   });
+}
+
+/** The categories a vendor can choose, with what Recommend keeps of each. */
+export function useCategoryOptions() {
+  return useQuery<CategoryOption[]>({
+    queryKey: ['categories'],
+    queryFn: listCategories,
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** What Recommend keeps of this vendor's sales, in percent — the standard rate until known. */
+export function useFeePercent(): number {
+  const { data } = useVendorProfile();
+  return data?.commission?.percent ?? STANDARD_FEE_PERCENT;
 }

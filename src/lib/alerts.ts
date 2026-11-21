@@ -118,6 +118,9 @@ export function destinationFor(
     case 'KYC_APPROVED':
     case 'KYC_REJECTED':
       return '/kyc';
+    case 'COMMISSION_RATE_RAISED':
+      // The Guide's fees section shows their rate, worked through on an example.
+      return '/guide';
     case 'STORE_UPDATED_BY_ADMIN': {
       // The server says where: the store, a product, the documents. Only ever an
       // in-app path.
